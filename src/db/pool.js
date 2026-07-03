@@ -4,10 +4,16 @@ import { logger } from '../lib/logger.js';
 
 const { Pool } = pg;
 
+// Managed-Postgres (Neon, Supabase, RDS и т.п.) требует TLS. Локальный docker-Postgres — нет.
+// Включаем SSL для всех хостов, кроме localhost. rejectUnauthorized:false — провайдеры используют
+// собственные CA, проверять цепочку в MVP не обязательно (соединение всё равно шифруется).
+const isLocalDb = /@(localhost|127\.0\.0\.1)[:/]/.test(env.databaseUrl);
+
 export const pool = new Pool({
   connectionString: env.databaseUrl,
   max: 20,
   idleTimeoutMillis: 30000,
+  ssl: isLocalDb ? false : { rejectUnauthorized: false },
 });
 
 pool.on('error', (err) => {
