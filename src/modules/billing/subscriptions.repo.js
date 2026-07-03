@@ -20,6 +20,16 @@ export async function getSubscriptionByOrg(orgId) {
   return rows[0] || null;
 }
 
+export async function getSubscriptionByCustomerId(billingCustomerId) {
+  const { rows } = await query(
+    `SELECT id, org_id AS "orgId", plan_id AS "planId", billing_provider AS "billingProvider",
+            billing_customer_id AS "billingCustomerId", status, current_period_end AS "currentPeriodEnd"
+     FROM subscriptions WHERE billing_customer_id = $1`,
+    [billingCustomerId]
+  );
+  return rows[0] || null;
+}
+
 export async function updateSubscriptionPlan(orgId, planId) {
   const { rows } = await query(
     `UPDATE subscriptions SET plan_id = $1, updated_at = now() WHERE org_id = $2
@@ -63,6 +73,7 @@ export async function listPlans() {
 export default {
   createSubscription,
   getSubscriptionByOrg,
+  getSubscriptionByCustomerId,
   updateSubscriptionPlan,
   updateSubscriptionFromStripe,
   getPlan,

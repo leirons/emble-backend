@@ -53,9 +53,27 @@ export async function createCheckoutSession(orgId, planId) {
     success_url: `${env.appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${env.appUrl}/billing/cancel`,
     metadata: { orgId, planId },
+    // Stripe НЕ копирует metadata сессии в объект Subscription. Дублируем orgId/planId
+    // в subscription_data, чтобы вебхук customer.subscription.deleted мог найти орг. (ACM-16)
+    subscription_data: { metadata: { orgId, planId } },
   });
 
   return { checkoutUrl: session.url };
+}
+
+/**
+ * Определяет orgId для события customer.subscription.deleted.
+ * Приоритет — metadata.orgId (проставляется через subscription_data при checkout),
+ * fallback — поиск подписки по billing_customer_id (для подписок, созданных до фикса ACM-16,
+ * у которых metadata пустая). Тестируемая функция: lookupByCustomerId инжектируется.
+ */
+export async function resolveDeletedSubscriptionOrgId(sub, lookupByCustomerId) {
+  const fromMetadata = sub?.metadata?.orgId;
+  if (fromMetadata) return fromMetadata;
+  const customerId = sub?.customer;
+  if (!customerId) return null;
+  const existing = await lookupByCustomerId(customerId);
+  return existing?.orgId || null;
 }
 
 /**
@@ -91,15 +109,17 @@ export async function handleStripeWebhook(rawBody, signature) {
     }
     case 'customer.subscription.deleted': {
       const sub = event.data.object;
-      const orgId = sub.metadata?.orgId;
+      const orgId = await resolveDeletedSubscriptionOrgId(sub, subsRepo.getSubscriptionByCustomerId);
       if (orgId) {
         await subsRepo.updateSubscriptionFromStripe({
           orgId,
           billingCustomerId: sub.customer,
           status: 'canceled',
-          currentPeriodEnd: new Date(sub.current_period_end * 1000),
+          currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : null,
           planId: 'free',
         });
+      } else {
+        logger.warn({ customer: sub.customer }, 'ACM-16: не удалось определить orgId для отменённой подписки');
       }
       break;
     }
