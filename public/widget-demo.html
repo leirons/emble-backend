@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Emble — демо-страница для теста виджета</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#0B0F19; color:#E5E7EB; padding:60px; }
+  code { background:#1a1f2e; padding:2px 8px; border-radius:6px; }
+  .row { margin:16px 0; display:flex; gap:8px; max-width:520px; }
+  input { flex:1; background:#11151F; border:1px solid rgba(255,255,255,.14); color:#E5E7EB; border-radius:8px; padding:9px 12px; font-size:14px; }
+  button { background:#10B981; color:#06251A; border:none; border-radius:8px; padding:9px 18px; font-weight:600; cursor:pointer; }
+</style>
+</head>
+<body>
+  <h1>Тестовая страница интеграции</h1>
+  <p>Укажите слаг агента (из дашборда) — виджет появится в правом нижнем углу.
+     Можно также передать его в URL: <code>?agent=agent-xxxxx</code></p>
+
+  <div class="row">
+    <input id="slugInput" placeholder="agent-xxxxx" />
+    <button id="loadBtn">Загрузить виджет</button>
+  </div>
+  <p id="hint" style="color:#8B93A7; font-size:13px;"></p>
+
+<script src="/js/widget-demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# Local env / secrets (NEVER commit real secrets — .env.example is the template)
+.env
+.env.local
+.env.*.local
+
+# Dependencies / build
+node_modules/
+dist/
+coverage/
+*.log
+
+# OS / editor / local tooling
+.DS_Store
+.claude/
+
+# Unrelated nested project (not part of this backend)
+poker-trainer/
+
+# Python caches (from stray files)
+__pycache__/
+*.pyc

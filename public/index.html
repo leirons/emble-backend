@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emble — ИИ-агенты для вашего сайта за 5 минут</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/landing.css">
+</head>
+<body class="landing">
+
+<div style="min-height:100vh; position:relative;">
+  <div class="glow" style="top:-200px; left:50%; transform:translateX(-50%); width:900px; height:600px; background:radial-gradient(closest-side, rgba(99,102,241,0.22), transparent 70%);"></div>
+  <div class="glow" style="top:1400px; right:-200px; width:700px; height:700px; background:radial-gradient(closest-side, rgba(16,185,129,0.10), transparent 70%);"></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand-mark">
+        <div class="brand-logo"><span></span></div>
+        <span class="brand-name">Emble</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#templates">Шаблоны</a>
+        <a href="#constructor">Кастомизация</a>
+        <a href="#code">Интеграция</a>
+        <a href="#how">Как это работает</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="link" href="/dashboard.html#login">Войти</a>
+        <a class="btn btn-primary btn-sm" href="/dashboard.html#register">Начать бесплатно</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="badge"><span class="dot"></span> Новое: ИИ-агенты на GPT-4o и Claude</div>
+      <h1>Оживите ваш сайт умными<br><span class="grad">ИИ-агентами</span> за 5 минут</h1>
+      <p>Настройте логику ИИ, оформите виджет под свой бренд и встройте на сайт одной строкой кода. Без разработчиков и сложных интеграций.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="/dashboard.html#register">Создать агента бесплатно</a>
+        <a class="btn btn-ghost" href="#how">Как это работает</a>
+      </div>
+    </div>
+
+    <div class="demo-panel">
+      <div class="demo-controls">
+        <div class="eyebrow">Шаг 1 · Выбор агента</div>
+        <div class="title">Панель управления виджетом</div>
+        <div class="template-list" id="templateList"></div>
+        <div class="foot"><span class="dot"></span> Изменения применяются к превью мгновенно</div>
+      </div>
+
+      <div class="demo-preview">
+        <div class="browser-chrome">
+          <span class="traffic"></span><span class="traffic"></span><span class="traffic"></span>
+          <span class="url">yourwebsite.com</span>
+        </div>
+        <div class="site-body">
+          <div class="skeleton-line" style="height:12px; width:45%;"></div>
+          <div class="skeleton-line" style="height:9px; width:80%; background:rgba(255,255,255,0.045);"></div>
+          <div class="skeleton-line" style="height:9px; width:70%; background:rgba(255,255,255,0.045);"></div>
+          <div class="skeleton-line" style="height:9px; width:76%; background:rgba(255,255,255,0.045); margin-bottom:26px;"></div>
+          <div class="skeleton-grid"><div class="skeleton-box"></div><div class="skeleton-box"></div></div>
+
+          <div class="widget-preview" id="widgetPreview">
+            <div class="widget-header">
+              <span class="avatar" id="wInitial"></span>
+              <span class="meta">
+                <span class="name" id="wName"></span>
+                <span class="status"><span class="dot"></span> онлайн</span>
+              </span>
+              <span style="width:22px; height:2px; border-radius:2px; background:rgba(255,255,255,0.6);"></span>
+            </div>
+            <div class="widget-body">
+              <div class="widget-greeting" id="wGreeting"></div>
+              <div class="widget-chips" id="wChips"></div>
+              <div class="widget-input-row">
+                <span class="widget-input">Напишите сообщение…</span>
+                <span class="widget-send">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="#fff"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="launcher" id="wLauncher">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H9l-5 4V5z" fill="#fff"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="templates" class="section">
+    <div class="section-head">
+      <div class="eyebrow violet">Форм-факторы</div>
+      <h2>Один агент — любой формат</h2>
+      <p>Выберите, как виджет живёт на странице. Логика остаётся прежней — меняется только оболочка.</p>
+    </div>
+    <div class="formfactor-grid">
+      <div class="card formfactor-card">
+        <div class="formfactor-thumb">
+          <div style="position:absolute; top:12px; left:12px; right:34px; height:7px; border-radius:5px; background:rgba(255,255,255,0.06);"></div>
+          <div style="position:absolute; top:26px; left:12px; width:60%; height:7px; border-radius:5px; background:rgba(255,255,255,0.045);"></div>
+          <div style="position:absolute; right:12px; bottom:12px; width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#6366F1,#8B5CF6); box-shadow:0 8px 20px rgba(99,102,241,0.5);"></div>
+        </div>
+        <div class="ftitle">Floating Chat</div>
+        <div class="fdesc">Плавающая кнопка в углу — классика для поддержки на всём сайте.</div>
+      </div>
+      <div class="card formfactor-card">
+        <div class="formfactor-thumb" style="padding:12px;">
+          <div style="height:6px; width:70%; border-radius:5px; background:rgba(255,255,255,0.06); margin-bottom:8px;"></div>
+          <div style="height:44px; border-radius:9px; background:rgba(99,102,241,0.10); border:1px solid rgba(99,102,241,0.35); margin:6px 0; display:flex; align-items:center; padding:0 10px; gap:8px;">
+            <span style="width:20px; height:20px; border-radius:6px; background:#6366F1;"></span>
+            <span style="height:6px; flex:1; border-radius:5px; background:rgba(255,255,255,0.14);"></span>
+          </div>
+          <div style="height:6px; width:85%; border-radius:5px; background:rgba(255,255,255,0.05); margin-top:8px;"></div>
+        </div>
+        <div class="ftitle">Inline Block</div>
+        <div class="fdesc">Встраивается прямо в тело статьи или лендинга как часть контента.</div>
+      </div>
+      <div class="card formfactor-card">
+        <div class="formfactor-thumb">
+          <div style="position:absolute; top:12px; left:12px; width:40%; height:7px; border-radius:5px; background:rgba(255,255,255,0.05);"></div>
+          <div style="position:absolute; top:0; bottom:0; right:0; width:52%; background:linear-gradient(180deg, rgba(139,92,246,0.14), rgba(99,102,241,0.10)); border-left:1.5px solid #8B5CF6; padding:12px;">
+            <div style="height:7px; width:70%; border-radius:5px; background:rgba(255,255,255,0.2); margin-bottom:10px;"></div>
+            <div style="height:6px; width:90%; border-radius:5px; background:rgba(255,255,255,0.1); margin-bottom:6px;"></div>
+            <div style="height:6px; width:80%; border-radius:5px; background:rgba(255,255,255,0.1);"></div>
+          </div>
+        </div>
+        <div class="ftitle">Side Panel</div>
+        <div class="fdesc">Выезжающая шторка на пол-экрана для сложных консультаций.</div>
+      </div>
+      <div class="card formfactor-card">
+        <div class="formfactor-thumb">
+          <div style="position:absolute; right:14px; bottom:44px; max-width:70%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.08); padding:9px 12px; border-radius:12px 12px 4px 12px;">
+            <span style="display:block; height:6px; width:80px; border-radius:5px; background:rgba(255,255,255,0.22); margin-bottom:5px;"></span>
+            <span style="display:block; height:6px; width:54px; border-radius:5px; background:rgba(255,255,255,0.14);"></span>
+          </div>
+          <div style="position:absolute; right:14px; bottom:12px; width:26px; height:26px; border-radius:50%; background:#34D399;"></div>
+        </div>
+        <div class="ftitle">Minimal Bubble</div>
+        <div class="fdesc">Ненавязчивое облачко-подсказка без открытого окна чата.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="constructor" class="section">
+    <div class="constructor">
+      <div class="constructor-controls">
+        <div class="eyebrow">Шаг 2 · Кастомизация</div>
+        <h2>Соберите виджет под свой бренд</h2>
+        <p>Аватар, фирменные цвета, приветствие и быстрые ответы — без единой строки CSS.</p>
+
+        <div class="ctl-block">
+          <div class="ctl-label">Аватар ассистента</div>
+          <div class="avatar-row">
+            <span class="avatar-swatch" style="background:linear-gradient(135deg,#6366F1,#8B5CF6); box-shadow:0 0 0 2px #0B0F19, 0 0 0 4px rgba(99,102,241,0.5);"></span>
+            <span class="avatar-swatch" style="background:linear-gradient(135deg,#10B981,#34D399);"></span>
+            <span class="avatar-swatch" style="background:linear-gradient(135deg,#F59E0B,#EF4444);"></span>
+            <span class="avatar-swatch" style="background:rgba(255,255,255,0.06); border:1px dashed rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; color:#6B7280; font-size:20px;">+</span>
+          </div>
+        </div>
+
+        <div class="ctl-block">
+          <div class="ctl-label">Фирменный цвет</div>
+          <div class="color-row" id="colorRow"></div>
+        </div>
+
+        <div class="ctl-block">
+          <div class="ctl-label">Приветственное сообщение</div>
+          <div class="welcome-box">Здравствуйте! Я ваш ИИ-ассистент. Чем могу помочь сегодня?</div>
+        </div>
+
+        <div>
+          <div class="ctl-label">Быстрые ответы (Quick Replies)</div>
+          <div class="chip-row">
+            <span class="chip-static">Узнать цены</span>
+            <span class="chip-static">Заказать демо</span>
+            <span class="chip-static">Связаться с нами</span>
+            <span class="chip-static chip-add">+ добавить</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="constructor-preview">
+        <div style="width:300px; border-radius:18px; overflow:hidden; background:#11151F; border:1px solid rgba(255,255,255,0.10);" id="brandPreviewCard">
+          <div style="padding:14px 16px; display:flex; align-items:center; gap:11px;" id="brandPreviewHeader">
+            <span style="width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,0.22); display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:15px;">A</span>
+            <span style="flex:1;">
+              <span style="display:block; color:#fff; font-weight:600; font-size:14px;">Ваш ассистент</span>
+              <span style="display:block; color:rgba(255,255,255,0.85); font-size:11.5px; margin-top:1px;">на связи</span>
+            </span>
+          </div>
+          <div style="padding:16px; background:#0E121C;">
+            <div style="max-width:84%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.06); padding:10px 13px; border-radius:4px 14px 14px 14px; font-size:13px; line-height:1.45; color:#D8DBE3;">Здравствуйте! Я ваш ИИ-ассистент. Чем могу помочь?</div>
+            <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:14px;" id="brandPreviewChips"></div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:16px;">
+              <span style="flex:1; height:38px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; padding:0 12px; font-size:12.5px; color:#5B6472;">Напишите сообщение…</span>
+              <span style="width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;" id="brandPreviewSend">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="#fff"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="code" class="section">
+    <div class="integration">
+      <div>
+        <div class="eyebrow" style="color:var(--green);">Шаг 3 · Интеграция</div>
+        <h2>Одна строка — и агент на сайте</h2>
+        <p>Вставьте скрипт перед закрывающим тегом body. Виджет подгрузится асинхронно и не замедлит страницу.</p>
+        <div class="platform-pills">
+          <span class="platform-pill">Tilda</span>
+          <span class="platform-pill">WordPress</span>
+          <span class="platform-pill">Shopify</span>
+          <span class="platform-pill">Webflow</span>
+        </div>
+      </div>
+
+      <div class="code-window">
+        <div class="code-titlebar">
+          <div class="dots">
+            <span style="background:#FF5F57;"></span><span style="background:#FEBC2E;"></span><span style="background:#28C840;"></span>
+            <span class="filename">index.html</span>
+          </div>
+          <button class="copy-btn" id="copyCodeBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 012-2h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span id="copyCodeLabel">Copy Code</span>
+          </button>
+        </div>
+        <div class="code-body">
+          <div style="color:#5B6472;">&lt;!-- Emble AI Widget --&gt;</div>
+          <div><span style="color:#6B7280;">&lt;</span><span style="color:#F472B6;">script</span> <span style="color:#A5B4FC;">src</span><span style="color:#6B7280;">=</span><span style="color:#34D399;">"https://cdn.emble.ai/embed.js"</span></div>
+          <div style="padding-left:32px;"><span style="color:#A5B4FC;">data-agent</span><span style="color:#6B7280;">=</span><span style="color:#34D399;">"agent-x9f2c"</span> <span style="color:#A5B4FC;">async</span><span style="color:#6B7280;">&gt;&lt;/</span><span style="color:#F472B6;">script</span><span style="color:#6B7280;">&gt;</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="section">
+    <div class="section-head center">
+      <div class="eyebrow violet">Как это работает</div>
+      <h2>Три простых шага до запуска</h2>
+    </div>
+    <div class="how-grid">
+      <div class="card how-card">
+        <div class="how-num" style="color:var(--indigo);">01</div>
+        <div class="how-icon" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.35);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H9l-5 4V5z" stroke="#818CF8" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h8M8 12h5" stroke="#818CF8" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div class="htitle">Обучите ИИ</div>
+        <div class="hdesc">Загрузите текст, ссылки или базу знаний — либо просто опишите поведение промптом.</div>
+      </div>
+      <div class="card how-card">
+        <div class="how-num" style="color:var(--violet);">02</div>
+        <div class="how-icon" style="background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.35);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#A78BFA" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="#A78BFA"/></svg>
+        </div>
+        <div class="htitle">Настройте дизайн</div>
+        <div class="hdesc">Выберите форму, фирменные цвета, аватар и быстрые ответы в визуальном конструкторе.</div>
+      </div>
+      <div class="card how-card">
+        <div class="how-num" style="color:var(--green);">03</div>
+        <div class="how-icon" style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4" stroke="#34D399" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="htitle">Вставьте код</div>
+        <div class="hdesc">Одна строка на Tilda, WordPress, Shopify или Webflow — и агент уже работает.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <div class="cta-box">
+      <div class="glow" style="top:-120px; left:50%; transform:translateX(-50%); width:600px; height:400px; background:radial-gradient(closest-side, rgba(99,102,241,0.3), transparent 70%);"></div>
+      <div style="position:relative;">
+        <h2>Запустите своего ИИ-агента сегодня</h2>
+        <p>Бесплатный тариф навсегда. Без карты, без кода, без разработчиков.</p>
+        <a class="btn btn-primary" href="/dashboard.html#register">Создать агента бесплатно</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="mark"></div>
+        <span style="font-weight:700; color:#E5E7EB;">Emble</span>
+        <span class="copy">© 2026 · Все права защищены</span>
+      </div>
+      <div class="footer-links">
+        <a href="#">Документация</a>
+        <a href="#">Цены</a>
+        <a href="#">Контакты</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script src="/js/landing.js"></script>
+</body>
+</html>

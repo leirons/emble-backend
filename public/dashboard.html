@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emble — Дашборд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body class="dash">
+
+<!-- ===================== AUTH VIEW ===================== -->
+<div id="authView" class="auth-wrap">
+  <div class="glow" style="top:-160px; left:50%; transform:translateX(-50%); width:700px; height:500px; background:radial-gradient(closest-side, rgba(99,102,241,0.18), transparent 70%); position:fixed;"></div>
+  <div class="card auth-card" style="position:relative;">
+    <a href="/" class="auth-logo" style="text-decoration:none;">
+      <div class="brand-logo"><span></span></div>
+      <span class="brand-name">Emble</span>
+    </a>
+
+    <div class="auth-tabs">
+      <button class="auth-tab" id="tabLogin" type="button">Вход</button>
+      <button class="auth-tab" id="tabRegister" type="button">Регистрация</button>
+    </div>
+
+    <div id="loginPane">
+      <h1>С возвращением</h1>
+      <p class="sub">Войдите, чтобы управлять агентами.</p>
+      <div id="loginError"></div>
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="loginPassword">Пароль</label>
+          <input type="password" id="loginPassword" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="loginSubmit">Войти</button>
+      </form>
+      <div class="auth-foot">Демо-доступ: <b>demo@emble.ai</b> / <b>password123</b> (после <code>npm run seed</code>)</div>
+    </div>
+
+    <div id="registerPane" style="display:none;">
+      <h1>Создать аккаунт</h1>
+      <p class="sub">Бесплатный тариф навсегда, без карты.</p>
+      <div id="registerError"></div>
+      <form id="registerForm">
+        <div class="field">
+          <label for="regOrg">Название организации</label>
+          <input type="text" id="regOrg" required minlength="2" maxlength="120">
+        </div>
+        <div class="field">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="regPassword">Пароль</label>
+          <input type="password" id="regPassword" required minlength="8" maxlength="72" autocomplete="new-password">
+          <div class="hint">Минимум 8 символов</div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="registerSubmit">Создать агента бесплатно</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP VIEW ===================== -->
+<div id="appView" style="display:none;">
+  <nav class="dash-nav">
+    <div class="dash-nav-inner">
+      <a href="#" class="brand-mark" id="homeLink">
+        <div class="brand-logo"><span></span></div>
+        <span class="brand-name">Emble</span>
+      </a>
+      <div class="user-box">
+        <span class="org-name" id="userEmailLabel"></span>
+        <button class="btn btn-outline btn-sm" id="logoutBtn">Выйти</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="dash-main">
+    <!-- Agents list -->
+    <div id="agentsListView">
+      <div class="dash-head">
+        <div>
+          <h1>Мои агенты</h1>
+          <p>Создайте ИИ-агента и получите код для вставки на сайт.</p>
+        </div>
+        <button class="btn btn-primary" id="createAgentBtn">+ Создать агента</button>
+      </div>
+      <div id="agentsError"></div>
+      <div id="agentsGrid" class="agents-grid"></div>
+    </div>
+
+    <!-- Agent detail -->
+    <div id="agentDetailView" style="display:none;"></div>
+  </main>
+</div>
+
+<!-- ===================== CREATE AGENT MODAL ===================== -->
+<div id="createModal" class="modal-backdrop" style="display:none;">
+  <div class="modal">
+    <h2>Новый агент</h2>
+    <div id="createError"></div>
+    <form id="createForm">
+      <div class="field">
+        <label for="agentName">Название</label>
+        <input type="text" id="agentName" required minlength="2" maxlength="120" placeholder="Например, Поддержка сайта">
+      </div>
+      <div class="field">
+        <label>Шаблон поведения</label>
+        <div class="template-pick" id="templatePick"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="cancelCreateBtn">Отмена</button>
+        <button type="submit" class="btn btn-primary" id="createSubmit">Создать</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toastRoot"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>
