@@ -54,8 +54,18 @@ const TOPIC_CATEGORIES = [
   { name: 'Уход за изделием', kw: ['уход', 'стирк', 'стирать', 'глад', 'чист', 'хранен'] },
 ];
 
+/**
+ * Ставка конверсии шага воронки в процентах, ограниченная диапазоном [0, 100].
+ * numerator и denominator — число уникальных сессий на соседних шагах.
+ */
+export function funnelRate(numerator, denominator) {
+  if (!denominator || denominator <= 0) return 0;
+  const pct = (numerator / denominator) * 100;
+  return +Math.min(100, Math.max(0, pct)).toFixed(1);
+}
+
 /** Тематический анализ вопросов пользователей без LLM: топ-5 тем в процентах. */
-function computeTopics(texts) {
+export function computeTopics(texts) {
   const counts = new Map();
   for (const raw of texts) {
     const t = String(raw || '').toLowerCase();
@@ -122,8 +132,11 @@ export async function getSummary(orgId, agentId, days = 30) {
       loaded: funnel.loaded,
       opened: funnel.opened,
       chatStarted: funnel.chatStarted,
-      openRate: funnel.loaded > 0 ? +((funnel.opened / funnel.loaded) * 100).toFixed(1) : 0,
-      chatRate: funnel.opened > 0 ? +((funnel.chatStarted / funnel.opened) * 100).toFixed(1) : 0,
+      // Ставки конверсии ограничены 100%: события widget_loaded/opened приходят best-effort
+      // через sendBeacon (могут теряться при уходе со страницы), тогда как chat_started
+      // логируется на сервере надёжно. Без clamp дашборд мог бы показать конверсию > 100%.
+      openRate: funnelRate(funnel.opened, funnel.loaded),
+      chatRate: funnelRate(funnel.chatStarted, funnel.opened),
     },
     triggers: triggers.map((t) => ({ id: t.id, label: TRIGGER_LABELS[t.id] || t.id, count: t.count })),
     // Блок 4
@@ -151,4 +164,12 @@ export async function resolveUnansweredQuestion(orgId, agentId, questionId) {
   return { resolved: updated > 0 };
 }
 
-export default { EVENT_TYPES, logEvent, recordUnanswered, getSummary, resolveUnansweredQuestion };
+export default {
+  EVENT_TYPES,
+  logEvent,
+  recordUnanswered,
+  getSummary,
+  resolveUnansweredQuestion,
+  funnelRate,
+  computeTopics,
+};
