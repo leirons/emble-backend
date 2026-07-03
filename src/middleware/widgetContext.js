@@ -1,20 +1,6 @@
 import { getAgentBySlug, listWidgetDomains } from '../modules/agents/agents.repo.js';
 import { notFound, forbidden } from '../lib/errors.js';
-
-function extractHost(originOrReferer) {
-  if (!originOrReferer) return null;
-  try {
-    return new URL(originOrReferer).hostname.toLowerCase();
-  } catch {
-    return null;
-  }
-}
-
-function hostMatchesDomain(host, domain) {
-  if (!host || !domain) return false;
-  const d = domain.toLowerCase();
-  return host === d || host.endsWith(`.${d}`);
-}
+import { extractHost, isOriginAllowed } from '../lib/widgetOrigin.js';
 
 /**
  * Резолвит агента по :agentSlug из URL и кладёт в req.agent.
@@ -49,11 +35,7 @@ export async function checkWidgetOrigin(req, res, next) {
     const domains = await listWidgetDomains(req.agent.id);
     const allowed = domains.map((d) => d.domain);
 
-    const isAllowed =
-      allowed.length === 0 || // домен ещё не настроен клиентом — разрешаем на время интеграции
-      (host && (allowed.includes('*') || allowed.some((d) => hostMatchesDomain(host, d))));
-
-    if (!isAllowed) {
+    if (!isOriginAllowed(host, allowed)) {
       return next(forbidden('Домен не входит в список разрешённых для этого агента'));
     }
 
