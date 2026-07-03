@@ -8,7 +8,12 @@ import {
   feedbackSchema,
   trackEventSchema,
 } from '../src/modules/widget/widget.schema.js';
-import { logoutSchema } from '../src/modules/auth/auth.schema.js';
+import {
+  logoutSchema,
+  registerSchema,
+  loginSchema,
+  refreshSchema,
+} from '../src/modules/auth/auth.schema.js';
 
 // --- Leads ingest (/leads CRM) ---
 test('captureLead accepts a valid lead', () => {
@@ -59,6 +64,34 @@ test('logout accepts a valid string refreshToken', () => {
 test('logout rejects a non-string refreshToken', () => {
   assert.equal(logoutSchema.safeParse({ refreshToken: 12345 }).success, false);
   assert.equal(logoutSchema.safeParse({ refreshToken: { evil: true } }).success, false);
+});
+
+// --- Auth input length bounds (ACM-30): .email() checks format but not length, so a valid-looking
+//     but huge email/password/token could be dumped into the DB. Cap every string input. ---
+const hugeEmail = 'a'.repeat(300) + '@example.com'; // valid format, > 254 chars
+const hugeToken = 'a'.repeat(2000);
+
+test('register rejects an over-long email and an over-long password', () => {
+  const ok = registerSchema.safeParse({ orgName: 'Acme', email: 'owner@shop.com', password: 'sup3rsecret' });
+  assert.equal(ok.success, true);
+  assert.equal(registerSchema.safeParse({ orgName: 'Acme', email: hugeEmail, password: 'sup3rsecret' }).success, false);
+  assert.equal(registerSchema.safeParse({ orgName: 'Acme', email: 'owner@shop.com', password: 'x'.repeat(73) }).success, false);
+});
+
+test('login rejects an over-long email and an over-long password', () => {
+  assert.equal(loginSchema.safeParse({ email: 'owner@shop.com', password: 'pw' }).success, true);
+  assert.equal(loginSchema.safeParse({ email: hugeEmail, password: 'pw' }).success, false);
+  assert.equal(loginSchema.safeParse({ email: 'owner@shop.com', password: 'x'.repeat(73) }).success, false);
+});
+
+test('refresh/logout reject an over-long token', () => {
+  assert.equal(refreshSchema.safeParse({ refreshToken: 'a'.repeat(40) }).success, true);
+  assert.equal(refreshSchema.safeParse({ refreshToken: hugeToken }).success, false);
+  assert.equal(logoutSchema.safeParse({ refreshToken: hugeToken }).success, false);
+});
+
+test('captureLead rejects an over-long email', () => {
+  assert.equal(captureLeadSchema.safeParse({ email: hugeEmail }).success, false);
 });
 
 test('trackEvent only accepts whitelisted client event types', () => {
