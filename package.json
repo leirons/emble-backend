@@ -16,7 +16,9 @@
     "seed": "node src/db/seed.js",
     "backfill": "node src/db/backfill-embeddings.js",
     "test": "node --test",
-    "test:watch": "node --test --watch"
+    "test:watch": "node --test --watch",
+    "test:integration": "node scripts/prepare-test-db.mjs && node --test --test-concurrency=1 test-integration/auth.itest.js test-integration/leads.itest.js test-integration/analytics.itest.js",
+    "test:integration:setup": "node scripts/prepare-test-db.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",

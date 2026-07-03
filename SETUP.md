@@ -72,9 +72,29 @@ Coverage (`test/*.test.js`):
 - `chunk.test.js` — knowledge chunker (overlap, sentence boundaries, no infinite loop, full coverage).
 - `schemas.test.js` — widget + leads ingest contracts (visitorId bounds, message length, feedback rating, client-only event types, lead email/uuid).
 
-CI (`.github/workflows/ci.yml`) runs `npm ci && npm test` on every push/PR to `main`
-across Node 20 and 22. DB-backed integration tests are tracked as follow-up
-(they need Postgres+Redis services in the CI job).
+### DB-backed integration tests (ACM-15)
+End-to-end tests that exercise real Express + Postgres(+pgvector) + Redis for the flows the
+pure unit suite can't cover. They live in `test-integration/*.itest.js` (kept out of the default
+`npm test` discovery on purpose) and run against a dedicated **ephemeral** database.
+
+```bash
+docker compose up -d postgres redis      # or point TEST_DATABASE_URL at any Postgres+pgvector
+npm run test:integration                  # drops+creates emble_test, migrates, runs the suite
+```
+
+- `TEST_DATABASE_URL` (default `postgres://emble:emble@localhost:5432/emble_test`) selects the test
+  DB. `scripts/prepare-test-db.mjs` DROP/CREATEs it and applies migrations — it never touches your
+  dev/prod `DATABASE_URL`. Files run with `--test-concurrency=1` (they share one DB and TRUNCATE between tests).
+- Coverage (`test-integration/`): `auth.itest.js` (register/login/refresh chain/me/logout over HTTP),
+  `leads.itest.js` (widget lead capture → `leads` + `lead_captured` event, validation, origin whitelist),
+  `analytics.itest.js` (widget event ingest → `analytics_events` + funnel aggregation).
+- Scoped to flows verified **Real** in `docs/STATUS_MATRIX.md`. Chat/SSE (ACM-8) and knowledge
+  ingestion/retrieval (ACM-18) need an LLM key and are still under active hardening — deferred until
+  those land (see ACM-15 notes).
+
+CI (`.github/workflows/ci.yml`) runs `npm ci && npm test` on every push/PR to `main` across Node 20
+and 22 (unit `test` job), plus a separate `integration` job that spins up Postgres(+pgvector) and
+Redis service containers, prepares the test DB, and runs `npm run test:integration`.
 
 ## Verified (2026-07-03, Founding Engineer)
 Minimal mode booted on Node 24 with placeholder `.env`:
