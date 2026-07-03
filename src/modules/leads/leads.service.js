@@ -22,6 +22,9 @@ export async function captureLead(agentId, input) {
     name: lead.name,
     email: lead.email,
     phone: lead.phone,
+    // Пробрасываем источник в CRM-вебхук, чтобы клиент мог атрибутировать лид
+    // (manual / auto / escalation / email_fallback). Доступно как {{source}} в body_template.
+    source: lead.capturedFields?.source ?? null,
     conversationId: input.conversationId,
   });
 
@@ -40,14 +43,21 @@ function csvCell(v) {
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-/** Формирует CSV со всеми лидами агента. */
-export async function exportLeadsCsv(orgId, agentId) {
-  const agent = await agentsRepo.getAgentByIdForOrg(agentId, orgId);
-  if (!agent) throw notFound('Агент не найден');
-  const leads = await leadsRepo.listLeadsByAgent(agentId, { limit: 10000, offset: 0 });
-  const header = ['Дата', 'Имя', 'Email', 'Телефон', 'Диалог'];
+/**
+ * Чистая функция сериализации лидов в CSV (без БД) — вынесена для тестируемости.
+ * Колонка «Источник» берётся из captured_fields.source (атрибуция manual/auto/escalation/...).
+ */
+export function leadsToCsv(leads) {
+  const header = ['Дата', 'Имя', 'Email', 'Телефон', 'Источник', 'Диалог'];
   const rows = leads.map((l) =>
-    [new Date(l.createdAt).toISOString(), l.name || '', l.email || '', l.phone || '', l.conversationId || '']
+    [
+      new Date(l.createdAt).toISOString(),
+      l.name || '',
+      l.email || '',
+      l.phone || '',
+      l.capturedFields?.source || '',
+      l.conversationId || '',
+    ]
       .map(csvCell)
       .join(',')
   );
@@ -55,4 +65,12 @@ export async function exportLeadsCsv(orgId, agentId) {
   return '﻿' + [header.join(','), ...rows].join('\r\n');
 }
 
-export default { captureLead, listLeads, exportLeadsCsv };
+/** Формирует CSV со всеми лидами агента. */
+export async function exportLeadsCsv(orgId, agentId) {
+  const agent = await agentsRepo.getAgentByIdForOrg(agentId, orgId);
+  if (!agent) throw notFound('Агент не найден');
+  const leads = await leadsRepo.listLeadsByAgent(agentId, { limit: 10000, offset: 0 });
+  return leadsToCsv(leads);
+}
+
+export default { captureLead, listLeads, exportLeadsCsv, leadsToCsv };
