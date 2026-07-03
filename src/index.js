@@ -20,6 +20,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
+// За обратным прокси (Vercel/Cloudflare/nginx) реальный IP клиента приходит в X-Forwarded-For.
+// Доверяем одному ближайшему прокси, чтобы express-rate-limit корректно определял пользователя по IP.
+// '1' (а не 'true') — намеренно: 'true' доверяет всей цепочке и позволяет подделать IP через заголовок.
+app.set('trust proxy', 1);
+
 app.disable('x-powered-by');
 app.use(helmet({ crossOriginResourcePolicy: false })); // false — embed.js должен грузиться с любого домена клиента
 app.use(pinoHttp({ logger }));
