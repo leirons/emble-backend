@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>ACM-12 widget verification harness</title>
+<style>
+  html,body { margin:0; height:100%; background:#0B0F19; color:#E5E7EB; font-family:system-ui,sans-serif; }
+  .page { padding:40px; }
+  h1 { font-size:18px; margin:0 0 8px; }
+  p  { font-size:13px; color:#8B93A7; margin:4px 0; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <h1>Emble widget — offline verification harness</h1>
+    <p>Backend API is fully mocked in-page (window.fetch stub). No server required.</p>
+    <p id="scenario"></p>
+  </div>
+
+<script>
+/* ------------------------------------------------------------------ *
+ * Mock backend for embed.js. Everything embed.js needs from the API
+ * is served here so each screen can be rendered without the backend.
+ * ------------------------------------------------------------------ */
+(function () {
+  var q = new URLSearchParams(location.search);
+  var pos = q.get('pos') || 'bottom-right';
+  var closed = q.get('closed') === '1';
+  document.getElementById('scenario').textContent =
+    'scenario=' + (q.get('view') || 'launcher') + '  pos=' + pos + (closed ? '  (schedule: closed now)' : '');
+
+  // Friday (todayIdx 4) hours — open window vs a not-yet-open window.
+  var friHours = closed ? { from: '14:00', to: '18:00' } : { from: '09:00', to: '18:00' };
+
+  var CONFIG = {
+    agent: { name: 'Магазин «Вкусно»' },
+    branding: {
+      brandColor: '#c9105f',
+      position: pos,
+      greeting: 'Привет! Я помогу с заказом, доставкой и вопросами по товарам.',
+      quickReplies: ['Где мой заказ?', 'Условия доставки', 'Есть ли скидки?'],
+    },
+    settings: {
+      emailFallbackEnabled: true,
+      proactiveEnabled: q.get('view') === 'proactive',
+      proactiveMessage: 'Нужна помощь с выбором? Спросите меня 🙂',
+      proactiveDelaySeconds: 1,
+      enableReturningGreeting: false,
+    },
+    hasStartFlow: false,
+    startMenu: {
+      enabled: true,
+      items: [
+        { type: 'chat', title: 'Задать вопрос' },
+        { type: 'faq', title: 'Частые вопросы' },
+        {
+          type: 'contacts',
+          title: 'Контакты',
+          contacts: {
+            phone: '+7 (900) 123-45-67',
+            email: 'hello@vkusno.ru',
+            address: 'Москва, ул. Пример, 12',
+            schedule: [
+              { label: 'Пн', from: '09:00', to: '18:00' },
+              { label: 'Вт', from: '09:00', to: '18:00' },
+              { label: 'Ср', from: '09:00', to: '18:00' },
+              { label: 'Чт', from: '09:00', to: '18:00' },
+              { label: 'Пт', from: friHours.from, to: friHours.to },
+              { label: 'Сб', from: '10:00', to: '16:00' },
+              { label: 'Вс', enabled: false },
+            ],
+            socials: {
+              telegram: 'https://t.me/vkusno',
+              whatsapp: 'https://wa.me/79001234567',
+              instagram: 'https://instagram.com/vkusno',
+            },
+          },
+        },
+      ],
+    },
+    faq: [
+      { question: 'Как оформить заказ?', answer: 'Добавьте товары в корзину и нажмите «Оформить». Мы подтвердим заказ по телефону.' },
+      { question: 'Сколько идёт доставка?', answer: 'По городу — 1–2 дня, по России — 3–7 дней курьерской службой.' },
+      { question: 'Можно ли вернуть товар?', answer: 'Да, в течение 14 дней при сохранении товарного вида.' },
+    ],
+  };
+
+  function json(obj) {
+    return Promise.resolve(new Response(JSON.stringify(obj), {
+      status: 200, headers: { 'Content-Type': 'application/json' },
+    }));
+  }
+
+  // Simulated SSE stream for chat replies (streaming render verification).
+  function sseStream() {
+    var words = ['Заказ ', '№1024 ', 'уже ', 'в ', 'пути ', 'и ', 'будет ', 'у ', 'вас ', 'завтра ', 'до ', '18:00.'];
+    var enc = new TextEncoder();
+    var stream = new ReadableStream({
+      start: function (controller) {
+        var i = 0;
+        function push() {
+          if (i < words.length) {
+            controller.enqueue(enc.encode('event: delta\ndata: ' + JSON.stringify({ text: words[i] }) + '\n\n'));
+            i++;
+            setTimeout(push, 40);
+          } else {
+            controller.enqueue(enc.encode('event: done\ndata: ' + JSON.stringify({ messageId: 'm_demo_1' }) + '\n\n'));
+            controller.close();
+          }
+        }
+        push();
+      },
+    });
+    return Promise.resolve(new Response(stream, {
+      status: 200, headers: { 'Content-Type': 'text/event-stream' },
+    }));
+  }
+
+  window.fetch = function (url) {
+    var u = String(url);
+    if (u.indexOf('/config') !== -1) return json(CONFIG);
+    if (/\/conversations$/.test(u)) return json({ conversationId: 'c_demo_1' });
+    if (/\/messages$/.test(u)) return sseStream();
+    if (u.indexOf('/feedback') !== -1) return json({ ok: true });
+    if (u.indexOf('/leads') !== -1) return json({ ok: true, id: 'lead_1' });
+    if (u.indexOf('/events') !== -1) return json({ ok: true });
+    return json({ ok: true });
+  };
+  navigator.sendBeacon = function () { return true; };
+})();
+</script>
+<script src="../../public/embed.js" data-agent="demo-agent" data-api="http://mock.local"></script>
+</body>
+</html>

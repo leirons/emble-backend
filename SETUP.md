@@ -55,6 +55,27 @@ Open `http://localhost:4000/widget-demo.html` — test page with the embedded wi
 
 **Never commit `.env`** — it is gitignored. `.env.example` is the template.
 
+## Tests & CI
+Focused unit tests guard the highest-risk pure paths. They use Node's built-in
+test runner (`node --test`) — **no extra dependencies**, no DB, no network.
+
+```bash
+npm test          # run once
+npm run test:watch # re-run on change
+```
+
+Coverage (`test/*.test.js`):
+- `jwt.test.js` — access/refresh sign+verify round-trip, wrong-secret & tamper rejection.
+- `validate.test.js` — zod request-validation middleware (pass → parsed data, fail → 400 `AppError`).
+- `errors.test.js` — `AppError` status codes and factory helpers.
+- `widgetOrigin.test.js` — widget Origin/Referer whitelist matching (exact host, subdomains, wildcard, empty-list grace period).
+- `chunk.test.js` — knowledge chunker (overlap, sentence boundaries, no infinite loop, full coverage).
+- `schemas.test.js` — widget + leads ingest contracts (visitorId bounds, message length, feedback rating, client-only event types, lead email/uuid).
+
+CI (`.github/workflows/ci.yml`) runs `npm ci && npm test` on every push/PR to `main`
+across Node 20 and 22. DB-backed integration tests are tracked as follow-up
+(they need Postgres+Redis services in the CI job).
+
 ## Verified (2026-07-03, Founding Engineer)
 Minimal mode booted on Node 24 with placeholder `.env`:
 `/health` → `{"ok":true,"env":"development"}`, `/embed.js` → 200, `/dashboard.html` → 200.
