@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq';
-import { createRedisConnection } from './lib/redis.js';
-import { QUEUE_NAMES, enqueueKnowledgeIngestion } from './lib/queue.js';
+import { redis, createRedisConnection } from './lib/redis.js';
+import { QUEUE_NAMES, enqueueKnowledgeIngestion, closeQueues } from './lib/queue.js';
 import { processKnowledgeSource } from './modules/knowledge/ingestion.worker.js';
 import { processCatalogImport } from './modules/knowledge/catalog-import.worker.js';
 import * as knowledgeRepo from './modules/knowledge/knowledge.repo.js';
@@ -82,9 +82,24 @@ const syncScanTimer = setInterval(scanDueSources, SYNC_SCAN_INTERVAL_MS);
 enqueuePendingSources();
 scanDueSources();
 
-process.on('SIGTERM', async () => {
+// Раньше SIGTERM закрывал только воркеров, оставляя открытыми соединения очередей и общего Redis
+// (ACM-18 L4) — процесс не завершался чисто. Теперь закрываем всё: воркеры → очереди → общий Redis.
+let shuttingDown = false;
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  logger.info({ signal }, '[worker] graceful shutdown');
   clearInterval(syncScanTimer);
-  await worker.close();
-  await catalogWorker.close();
-  process.exit(0);
-});
+  try {
+    await Promise.all([worker.close(), catalogWorker.close()]);
+    await closeQueues();
+    await redis.quit();
+  } catch (err) {
+    logger.error({ err }, '[worker] ошибка при остановке, форсируем выход');
+  } finally {
+    process.exit(0);
+  }
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

@@ -43,7 +43,7 @@ export async function updateSubscriptionFromStripe({ orgId, billingCustomerId, s
   const { rows } = await query(
     `UPDATE subscriptions
      SET billing_provider = 'stripe', billing_customer_id = $2, status = $3,
-         current_period_end = $4, plan_id = COALESCE($5, plan_id), updated_at = now()
+         current_period_end = COALESCE($4, current_period_end), plan_id = COALESCE($5, plan_id), updated_at = now()
      WHERE org_id = $1
      RETURNING id, org_id AS "orgId", plan_id AS "planId", status`,
     [orgId, billingCustomerId, status, currentPeriodEnd, planId]

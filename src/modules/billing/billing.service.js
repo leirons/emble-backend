@@ -97,11 +97,22 @@ export async function handleStripeWebhook(rawBody, signature) {
       const orgId = session.client_reference_id || session.metadata?.orgId;
       const planId = session.metadata?.planId;
       if (orgId && planId) {
+        // Раньше сюда передавался null и обнулял current_period_end (ACM-18 L3). Тянем реальный
+        // конец периода из подписки Stripe; при неудаче COALESCE в репозитории сохранит прежнее значение.
+        let currentPeriodEnd = null;
+        if (session.subscription) {
+          try {
+            const sub = await stripe.subscriptions.retrieve(session.subscription);
+            if (sub?.current_period_end) currentPeriodEnd = new Date(sub.current_period_end * 1000);
+          } catch (err) {
+            logger.warn({ err, orgId }, 'Не удалось получить current_period_end из Stripe, сохраняем прежнее');
+          }
+        }
         await subsRepo.updateSubscriptionFromStripe({
           orgId,
           billingCustomerId: session.customer,
           status: 'active',
-          currentPeriodEnd: null,
+          currentPeriodEnd,
           planId,
         });
       }

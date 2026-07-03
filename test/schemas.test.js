@@ -8,6 +8,7 @@ import {
   feedbackSchema,
   trackEventSchema,
 } from '../src/modules/widget/widget.schema.js';
+import { logoutSchema } from '../src/modules/auth/auth.schema.js';
 
 // --- Leads ingest (/leads CRM) ---
 test('captureLead accepts a valid lead', () => {
@@ -44,6 +45,20 @@ test('feedback only accepts +1 / -1 ratings', () => {
   assert.equal(feedbackSchema.safeParse({ rating: -1 }).success, true);
   assert.equal(feedbackSchema.safeParse({ rating: 0 }).success, false);
   assert.equal(feedbackSchema.safeParse({ rating: 5 }).success, false);
+});
+
+// --- Auth logout (ACM-18 L1): валидация не даёт hashToken() упасть на не-строке (500) ---
+test('logout accepts an empty body (idempotent logout)', () => {
+  assert.equal(logoutSchema.safeParse({}).success, true);
+});
+
+test('logout accepts a valid string refreshToken', () => {
+  assert.equal(logoutSchema.safeParse({ refreshToken: 'a'.repeat(20) }).success, true);
+});
+
+test('logout rejects a non-string refreshToken', () => {
+  assert.equal(logoutSchema.safeParse({ refreshToken: 12345 }).success, false);
+  assert.equal(logoutSchema.safeParse({ refreshToken: { evil: true } }).success, false);
 });
 
 test('trackEvent only accepts whitelisted client event types', () => {

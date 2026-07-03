@@ -25,7 +25,9 @@ export const authRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: redisStore('auth'),
-  keyGenerator: (req) => `${req.ip}:${req.body?.email || ''}`,
+  // Нормализуем email (lowercase+trim), иначе `User@x.com` и `user@x.com` дают разные ключи —
+  // перебор пароля по одному аккаунту обходил бы лимит вариацией регистра (ACM-18 L2).
+  keyGenerator: (req) => `${req.ip}:${(req.body?.email || '').toLowerCase().trim()}`,
 });
 
 // Публичный Widget API — лимит на агента, чтобы один встроенный виджет

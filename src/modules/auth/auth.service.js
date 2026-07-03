@@ -80,8 +80,12 @@ export async function refresh({ refreshToken }) {
   return { user, ...tokens };
 }
 
-export async function logout({ refreshToken }) {
-  if (refreshToken) await tokensRepo.revokeRefreshToken(refreshToken);
+export async function logout({ refreshToken } = {}) {
+  // Защита в глубину поверх валидации роута: revoke только по строковому токену,
+  // чтобы hashToken() гарантированно не получил не-строку (ACM-18 L1).
+  if (typeof refreshToken === 'string' && refreshToken) {
+    await tokensRepo.revokeRefreshToken(refreshToken);
+  }
 }
 
 export async function me(userId) {

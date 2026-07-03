@@ -57,4 +57,22 @@ export async function enqueueCatalogImport(payload) {
   return queue.add('import-products', payload, { jobId: `catalog-import-${payload.jobId}` });
 }
 
-export default { QUEUE_NAMES, getIngestionQueue, getCatalogImportQueue, enqueueKnowledgeIngestion, enqueueCatalogImport };
+/**
+ * Закрывает открытые очереди (и их выделенные Redis-соединения). Идемпотентно —
+ * безопасно вызывать при graceful shutdown воркера/сервера (ACM-18 L4).
+ */
+export async function closeQueues() {
+  const queues = [ingestionQueue, catalogImportQueue].filter(Boolean);
+  ingestionQueue = undefined;
+  catalogImportQueue = undefined;
+  await Promise.all(queues.map((q) => q.close()));
+}
+
+export default {
+  QUEUE_NAMES,
+  getIngestionQueue,
+  getCatalogImportQueue,
+  enqueueKnowledgeIngestion,
+  enqueueCatalogImport,
+  closeQueues,
+};
