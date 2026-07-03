@@ -301,7 +301,8 @@
       if (STATE.greeting) appendMessage('assistant', STATE.greeting);
       renderQuickReplies(STATE.branding && STATE.branding.quickReplies);
       if (!STATE.conversationId) {
-        initConversation().then(function () { if (STATE.hasStartFlow) advanceFlow(null); });
+        // Сеть может быть недоступна — глотаем ошибку, чтобы не было unhandledrejection на странице хоста.
+        initConversation().then(function () { if (STATE.hasStartFlow) advanceFlow(null); }).catch(function () {});
       }
     }
   }
@@ -648,12 +649,14 @@
     if (!opts.skipEcho) appendMessage('user', text);
     quickEl.innerHTML = '';
 
-    if (!STATE.conversationId) await initConversation();
-
     var typingEl = showTypingIndicator();
     var assistantEl = appendMessage('assistant', '');
     assistantEl.style.display = 'none';
     try {
+      // Диалог создаём здесь (внутри try), чтобы сетевая ошибка на этом шаге тоже
+      // показала сообщение об ошибке и сбросила STATE.sending, а не «подвесила» виджет.
+      if (!STATE.conversationId) await initConversation();
+
       var res = await api('/conversations/' + STATE.conversationId + '/messages', {
         method: 'POST',
         body: JSON.stringify({ text: text }),
@@ -681,7 +684,10 @@
       assistantEl.textContent = 'Не удалось получить ответ. Проверьте соединение.';
     } finally {
       if (typingEl) { typingEl.remove(); typingEl = null; }
-      if (!assistantEl.textContent) assistantEl.style.display = '';
+      // Показываем пузырёк, если в нём есть текст (ответ ИЛИ сообщение об ошибке);
+      // пустой пузырёк (ничего не пришло) убираем, чтобы не мигать пустотой.
+      if (assistantEl.textContent) assistantEl.style.display = '';
+      else assistantEl.remove();
       STATE.sending = false;
     }
   }
