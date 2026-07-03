@@ -65,14 +65,18 @@ export async function processKnowledgeSource({ sourceId, agentId }) {
       return;
     }
 
-    await knowledgeRepo.deleteChunksForSource(sourceId);
-
+    // Считаем ВСЕ embeddings ДО удаления старых чанков: если embedding упадёт (и повторы BullMQ
+    // исчерпаются) — старая, рабочая версия базы знаний останется нетронутой. Раньше чанки удалялись
+    // до re-embedding, и сбой оставлял источник вообще без данных (ACM-18 M1).
+    const enriched = [];
     for (let i = 0; i < chunks.length; i += EMBEDDING_BATCH_SIZE) {
       const batch = chunks.slice(i, i + EMBEDDING_BATCH_SIZE);
       const embeddings = await embedTexts(batch.map((c) => c.content), apiKey);
-      const enriched = batch.map((c, idx) => ({ ...c, embedding: embeddings[idx] }));
-      await knowledgeRepo.insertChunks(sourceId, agentId, enriched);
+      batch.forEach((c, idx) => enriched.push({ ...c, embedding: embeddings[idx] }));
     }
+
+    // Атомарный swap: удаление старых + вставка новых чанков в одной транзакции.
+    await knowledgeRepo.replaceChunksForSource(sourceId, agentId, enriched);
 
     await knowledgeRepo.setSourceStatus(sourceId, 'ready');
     await knowledgeRepo.markSourceSynced(sourceId);

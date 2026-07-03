@@ -35,6 +35,14 @@ export async function inviteMember(orgId, { email, role }) {
 
 export async function removeMember(orgId, userId, requesterId) {
   if (userId === requesterId) throw conflict('Нельзя удалить самого себя');
+
+  // Владельца организации удалять нельзя: иначе админ может «обезглавить» команду и вызвать
+  // локаут (нет пути восстановления владельца в MVP). Инвайты создают только admin/member,
+  // поэтому блокировки роли `owner` достаточно, чтобы гарантированно остался хотя бы один владелец.
+  const target = await usersRepo.getUserById(userId);
+  if (!target || target.orgId !== orgId) throw notFound('Участник не найден');
+  if (target.role === 'owner') throw conflict('Нельзя удалить владельца организации');
+
   await usersRepo.deleteUser(userId, orgId);
 }
 

@@ -92,19 +92,38 @@
   }
 
   // Simulated SSE stream for chat replies (streaming render verification).
+  // robust=1 emits ACM-19 torture frames to verify streamSSE robustness against
+  // the REAL embed.js: CRLF delimiters, JSON split across multiple data: lines,
+  // and a text-less delta frame (must NOT render literal "undefined").
+  var robust = q.get('robust') === '1';
   function sseStream() {
     var words = ['Заказ ', '№1024 ', 'уже ', 'в ', 'пути ', 'и ', 'будет ', 'у ', 'вас ', 'завтра ', 'до ', '18:00.'];
     var enc = new TextEncoder();
     var stream = new ReadableStream({
       start: function (controller) {
         var i = 0;
+        function frame(word, idx) {
+          if (!robust) return 'event: delta\ndata: ' + JSON.stringify({ text: word }) + '\n\n';
+          // Every 3rd frame: split the JSON payload across two CRLF-delimited data: lines.
+          if (idx % 3 === 0) {
+            return 'event: delta\r\ndata: {"text":\r\ndata: ' + JSON.stringify(word) + '}\r\n\r\n';
+          }
+          return 'event: delta\r\ndata: ' + JSON.stringify({ text: word }) + '\r\n\r\n';
+        }
         function push() {
+          if (robust && i === 0) {
+            // Text-less delta up front — the guard must skip it silently.
+            controller.enqueue(enc.encode('event: delta\r\ndata: {}\r\n\r\n'));
+          }
           if (i < words.length) {
-            controller.enqueue(enc.encode('event: delta\ndata: ' + JSON.stringify({ text: words[i] }) + '\n\n'));
+            controller.enqueue(enc.encode(frame(words[i], i)));
             i++;
             setTimeout(push, 40);
           } else {
-            controller.enqueue(enc.encode('event: done\ndata: ' + JSON.stringify({ messageId: 'm_demo_1' }) + '\n\n'));
+            var doneFrame = robust
+              ? 'event: done\r\ndata: ' + JSON.stringify({ messageId: 'm_demo_1' }) + '\r\n\r\n'
+              : 'event: done\ndata: ' + JSON.stringify({ messageId: 'm_demo_1' }) + '\n\n';
+            controller.enqueue(enc.encode(doneFrame));
             controller.close();
           }
         }

@@ -1,4 +1,4 @@
-import { query } from '../../db/pool.js';
+import { query, withTransaction } from '../../db/pool.js';
 
 const SOURCE_COLUMNS = `
   id, agent_id AS "agentId", type, status, title, source_url AS "sourceUrl",
@@ -117,12 +117,10 @@ function toVectorLiteral(embedding) {
   return `[${embedding.join(',')}]`;
 }
 
-/**
- * Массовая вставка чанков с embeddings. Выполняется построчно в рамках одного запроса
- * через unnest — быстрее, чем N отдельных INSERT.
- */
-export async function insertChunks(sourceId, agentId, chunks) {
-  if (chunks.length === 0) return;
+// Postgres ограничивает число bind-параметров (65535). 5 параметров на чанк → безопасный размер батча.
+const CHUNK_INSERT_BATCH = 500;
+
+function buildChunkInsert(sourceId, agentId, chunks) {
   const values = [];
   const params = [];
   let i = 1;
@@ -131,10 +129,36 @@ export async function insertChunks(sourceId, agentId, chunks) {
     params.push(sourceId, agentId, chunk.content, toVectorLiteral(chunk.embedding), chunk.tokenCount);
     i += 5;
   }
-  await query(
-    `INSERT INTO knowledge_chunks (source_id, agent_id, content, embedding, token_count) VALUES ${values.join(', ')}`,
-    params
-  );
+  return {
+    text: `INSERT INTO knowledge_chunks (source_id, agent_id, content, embedding, token_count) VALUES ${values.join(', ')}`,
+    params,
+  };
+}
+
+/**
+ * Массовая вставка чанков с embeddings. Выполняется построчно в рамках одного запроса — быстрее, чем N отдельных INSERT.
+ */
+export async function insertChunks(sourceId, agentId, chunks) {
+  if (chunks.length === 0) return;
+  const { text, params } = buildChunkInsert(sourceId, agentId, chunks);
+  await query(text, params);
+}
+
+/**
+ * Атомарно заменяет все чанки источника: удаление старых + вставка новых в ОДНОЙ транзакции.
+ * Вызывающий должен считать embeddings ДО вызова — тогда при сбое embedding старые чанки не трогаются,
+ * а при сбое вставки транзакция откатывается и старые чанки сохраняются (нет окна data-loss).
+ */
+export async function replaceChunksForSource(sourceId, agentId, chunks) {
+  await withTransaction(async (client) => {
+    await client.query(`DELETE FROM knowledge_chunks WHERE source_id = $1`, [sourceId]);
+    for (let i = 0; i < chunks.length; i += CHUNK_INSERT_BATCH) {
+      const batch = chunks.slice(i, i + CHUNK_INSERT_BATCH);
+      if (batch.length === 0) continue;
+      const { text, params } = buildChunkInsert(sourceId, agentId, batch);
+      await client.query(text, params);
+    }
+  });
 }
 
 /**
@@ -200,6 +224,7 @@ export default {
   deleteSource,
   deleteChunksForSource,
   insertChunks,
+  replaceChunksForSource,
   searchSimilarChunks,
   searchChunksByText,
   countChunksByAgent,

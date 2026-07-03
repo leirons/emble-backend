@@ -3,11 +3,14 @@ import { getOrStartConversation, handleUserMessage } from '../chat/chat.service.
 import { getActiveFlow } from '../flows/flows.repo.js';
 import { advanceConversationFlow } from '../flows/flows.service.js';
 import { setFeedback } from '../chat/messages.repo.js';
+import { getConversationForAgent } from '../chat/conversations.repo.js';
 import { listQaPairsByAgent } from '../knowledge/qa.repo.js';
 import { captureLead } from '../leads/leads.service.js';
 import { logEvent, EVENT_TYPES } from '../analytics/analytics.service.js';
 import { assertWithinMessageLimit } from '../usage/usage.service.js';
 import { captureLeadSchema } from '../leads/leads.schema.js';
+import { AppError } from '../../lib/errors.js';
+import { createSSEChannel } from '../../lib/sse.js';
 import { logger } from '../../lib/logger.js';
 
 const FAQ_LIMIT = 20;
@@ -67,30 +70,21 @@ export async function startConversation(req, res) {
 export async function sendMessage(req, res) {
   const agent = req.agent;
 
+  // Проверка лимита тарифа. Настоящее превышение (AppError 429) блокирует ответ.
+  // Но сбой самой проверки (например, кратковременная недоступность Б-биллинга) НЕ должен
+  // ронять чат на сайте клиента — в этом случае «фейлим открыто» и пропускаем сообщение,
+  // чтобы бэкенд-сбой никогда не ломал host-страницу. Перерасход по краю логируем для ревью.
   try {
     await assertWithinMessageLimit(agent.orgId);
   } catch (err) {
-    res.status(err.statusCode || 429).json({ error: { message: err.message } });
-    return;
+    if (err instanceof AppError) {
+      res.status(err.statusCode || 429).json({ error: { message: err.message } });
+      return;
+    }
+    logger.error({ err, orgId: agent.orgId }, 'Проверка лимита сообщений упала — пропускаем сообщение (fail-open)');
   }
 
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream; charset=utf-8',
-    'Cache-Control': 'no-cache, no-transform',
-    Connection: 'keep-alive',
-    'X-Accel-Buffering': 'no', // отключаем буферизацию на nginx-подобных прокси
-  });
-  res.flushHeaders?.();
-
-  let closed = false;
-  req.on('close', () => {
-    closed = true;
-  });
-
-  const send = (event, data) => {
-    if (closed) return;
-    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-  };
+  const channel = createSSEChannel(req, res);
 
   try {
     const { assistantMessage, escalated } = await handleUserMessage({
@@ -98,15 +92,15 @@ export async function sendMessage(req, res) {
       orgId: agent.orgId,
       conversationId: req.params.conversationId,
       userText: req.body.text,
-      onDelta: (delta) => send('delta', { text: delta }),
+      onDelta: (delta) => channel.send('delta', { text: delta }),
     });
-    if (escalated) send('escalated', {});
-    send('done', { messageId: assistantMessage.id });
+    if (escalated) channel.send('escalated', {});
+    channel.send('done', { messageId: assistantMessage.id });
   } catch (err) {
     logger.error({ err }, 'Ошибка при обработке сообщения виджета');
-    send('error', { message: 'Не удалось получить ответ ассистента. Попробуйте ещё раз.' });
+    channel.send('error', { message: 'Не удалось получить ответ ассистента. Попробуйте ещё раз.' });
   } finally {
-    if (!closed) res.end();
+    channel.close();
   }
 }
 
@@ -117,7 +111,16 @@ export async function advanceFlow(req, res) {
 }
 
 export async function submitFeedback(req, res) {
+  // Проверяем, что диалог принадлежит агенту из контекста запроса (как в sendMessage): без этого
+  // валидный виджет одного агента мог бы проставлять feedback на сообщения чужого диалога (ACM-18 M3).
+  const conversation = await getConversationForAgent(req.params.conversationId, req.agent.id);
+  if (!conversation) {
+    return res.status(404).json({ error: { message: 'Диалог не найден' } });
+  }
   const message = await setFeedback(req.params.messageId, req.params.conversationId, req.body.rating);
+  if (!message) {
+    return res.status(404).json({ error: { message: 'Сообщение не найдено' } });
+  }
   res.json({ message });
 }
 
