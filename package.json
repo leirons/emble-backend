@@ -14,7 +14,9 @@
     "worker:dev": "node --watch src/worker.js",
     "migrate": "node src/db/migrate.js",
     "seed": "node src/db/seed.js",
-    "backfill": "node src/db/backfill-embeddings.js"
+    "backfill": "node src/db/backfill-embeddings.js",
+    "test": "node --test",
+    "test:watch": "node --test --watch"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
