@@ -17,7 +17,15 @@
     return;
   }
 
-  var API_BASE = scriptTag.getAttribute('data-api') || new URL(scriptTag.src).origin;
+  var API_BASE = scriptTag.getAttribute('data-api') || (function () {
+    // scriptTag.src может быть пустым/относительным при динамической инъекции —
+    // new URL() тогда бросает исключение. Падаем на origin страницы-хоста.
+    try {
+      return new URL(scriptTag.src, document.baseURI).origin;
+    } catch (e) {
+      return window.location.origin;
+    }
+  })();
   var VISITOR_KEY = 'emble_visitor_' + AGENT_SLUG;
   var STATE = {
     conversationId: null,
@@ -90,19 +98,21 @@
     while (true) {
       var chunk = await reader.read();
       if (chunk.done) break;
-      buffer += decoder.decode(chunk.value, { stream: true });
+      // Нормализуем CRLF/CR в LF, чтобы граница фрейма (\n\n) ловилась независимо от переносов сервера.
+      buffer += decoder.decode(chunk.value, { stream: true }).replace(/\r\n?/g, '\n');
       var parts = buffer.split('\n\n');
       buffer = parts.pop();
       parts.forEach(function (part) {
         var eventType = 'message';
-        var dataLine = '';
+        var dataLines = [];
         part.split('\n').forEach(function (line) {
           if (line.indexOf('event:') === 0) eventType = line.slice(6).trim();
-          if (line.indexOf('data:') === 0) dataLine = line.slice(5).trim();
+          // По спецификации SSE несколько строк data: конкатенируются через \n.
+          else if (line.indexOf('data:') === 0) dataLines.push(line.slice(5).trim());
         });
-        if (dataLine) {
+        if (dataLines.length) {
           try {
-            onEvent(eventType, JSON.parse(dataLine));
+            onEvent(eventType, JSON.parse(dataLines.join('\n')));
           } catch (e) {
             /* игнорируем некорректный фрейм */
           }
@@ -670,7 +680,8 @@
       await streamSSE(res, function (event, data) {
         if (event === 'delta') {
           if (typingEl) { typingEl.remove(); typingEl = null; assistantEl.style.display = ''; }
-          assistantEl.textContent += data.text;
+          // Фрейм без text не должен дописывать литеральное "undefined".
+          if (data && typeof data.text === 'string') assistantEl.textContent += data.text;
           messagesEl.scrollTop = messagesEl.scrollHeight;
         } else if (event === 'error') {
           assistantEl.textContent = data.message || 'Произошла ошибка.';
