@@ -236,7 +236,8 @@
   var inputEl = el('input', { class: 'emble-input', placeholder: 'Напишите сообщение…' });
   var sendBtn = el('button', { class: 'emble-send', onClick: onSend });
   sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="#fff"/></svg>';
-  var emailLinkBtn = el('button', { class: 'emble-email-link', title: 'Оставить email', onClick: function () { showEmailForm(); } }, ['✉']);
+  // Ручной ввод email посетителем → source='manual' (отличается от авто-фолбэка бота 'email_fallback').
+  var emailLinkBtn = el('button', { class: 'emble-email-link', title: 'Оставить email', onClick: function () { showEmailForm({ source: 'manual' }); } }, ['✉']);
 
   var nameEl = el('span', { class: 'name' }, ['Ассистент']);
   var statusDot = el('span', { class: 'emble-status-dot' });
@@ -603,7 +604,7 @@
     // Не показываем, если чат открыт, уже показан, нет текста ИЛИ виджет уже нажимали.
     if (STATE.open || STATE.interacted || proactiveEl || !text) return;
     track('trigger_fired', { triggerId: triggerId || 'timer_20m' });
-    proactiveEl = el('div', { class: 'emble-proactive', onClick: function () { hideProactiveBadge(); togglePanel(); } }, [text]);
+    proactiveEl = el('div', { class: 'emble-proactive', onClick: function () { onProactiveClick(); } }, [text]);
     shadow.appendChild(proactiveEl);
     setTimeout(hideProactiveBadge, 12000);
   }
@@ -611,6 +612,22 @@
     if (proactiveEl) {
       proactiveEl.remove();
       proactiveEl = null;
+    }
+  }
+
+  // Клик по проактивному пузырьку — это авто-триггер виджета (не действие пользователя в чате).
+  // Открываем чат; если включён сбор email — сразу показываем форму с source='auto', чтобы
+  // проактивно собранные лиды были отличимы в CRM от ручных ('manual') и эскалационных ('escalation').
+  function onProactiveClick() {
+    hideProactiveBadge();
+    togglePanel();
+    var s = STATE.settings || {};
+    if (s.emailFallbackEnabled) {
+      showEmailForm({
+        source: 'auto',
+        prompt: 'Оставьте email — мы напишем вам с ответом или спецпредложением.',
+        success: 'Спасибо! Мы свяжемся с вами по email.',
+      });
     }
   }
 
