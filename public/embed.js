@@ -185,6 +185,10 @@
       '.emble-social { display:flex; align-items:center; justify-content:center; height:46px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); transition:background .12s ease; }' +
       '.emble-social:hover { background:rgba(255,255,255,.08); }' +
       '.emble-body { flex:1; overflow-y:auto; padding:14px 14px 8px; display:flex; flex-direction:column; gap:10px; }' +
+      // ACM-20: убираем «ползунок» (нативный скроллбар) внутри виджета — скролл остаётся рабочим
+      // (колёсико/тач/перетаскивание), но чанковый OS-слайдер больше не появляется при открытии.
+      '.emble-home, .emble-info, .emble-body { scrollbar-width: none; -ms-overflow-style: none; }' +
+      '.emble-home::-webkit-scrollbar, .emble-info::-webkit-scrollbar, .emble-body::-webkit-scrollbar { width:0; height:0; }' +
       '.emble-msg { max-width:82%; padding:9px 12px; border-radius:4px 14px 14px 14px; font-size:13px; ' +
       'line-height:1.45; color:#D8DBE3; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.06); align-self:flex-start; white-space:pre-wrap; }' +
       '.emble-msg.user { align-self:flex-end; background:' + brand + '; color:#fff; border-color:transparent; border-radius:14px 4px 14px 14px; }' +
