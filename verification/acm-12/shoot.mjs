@@ -96,6 +96,9 @@ const scenarios = [
   { name: '6-chat-stream',   url: HARNESS, drive: `q('.emble-launcher').click(); cardByText('Задать вопрос').click(); qa('.emble-chip')[0].click();`, wait: 1400 },
   { name: '7-position-left', url: HARNESS + '?pos=bottom-left', drive: ``, wait: 600 },
   { name: '8-proactive',     url: HARNESS + '?view=proactive', drive: ``, wait: 1800 },
+  // ACM-19: torture stream (CRLF frames, multi-line data:, leading text-less delta).
+  // Answer must render fully with NO literal "undefined" — proves streamSSE + delta guard.
+  { name: '9-robust-stream', url: HARNESS + '?robust=1', drive: `q('.emble-launcher').click(); cardByText('Задать вопрос').click(); qa('.emble-chip')[0].click();`, wait: 1400 },
 ];
 
 (async () => {
