@@ -18,7 +18,8 @@ export const env = {
   dashboardOrigin: process.env.DASHBOARD_ORIGIN || 'http://localhost:3000',
 
   databaseUrl: required('DATABASE_URL', 'postgres://emble:emble@localhost:5432/emble'),
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  // KV_URL — имя, под которым строку подключения (rediss://) отдаёт интеграция Vercel KV / Upstash.
+  redisUrl: process.env.REDIS_URL || process.env.KV_URL || 'redis://localhost:6379',
 
   jwt: {
     accessSecret: required('JWT_ACCESS_SECRET', 'dev-access-secret'),
