@@ -70,6 +70,9 @@ async function runToolLoop({ agent, systemPrompt, history, tools, conversationId
       history: workingHistory,
       tools: tools.length ? tools : undefined,
       apiKey,
+      // Как только клиент увидел любой текст (в этом или прошлом раунде tool-loop),
+      // fallback на второго провайдера склеил бы ответы — запрещаем его (ACM-17).
+      allowFallback: fullText.length === 0,
     })) {
       if (event.type === 'delta') {
         roundText += event.text;
@@ -123,7 +126,16 @@ async function runToolLoop({ agent, systemPrompt, history, tools, conversationId
  * @param {(delta: string) => void} params.onDelta
  * @returns {Promise<{ assistantMessage: object, userMessage: object, escalated: boolean }>}
  */
-export async function handleUserMessage({ agent, orgId, conversationId, userText, onDelta }) {
+export async function handleUserMessage({ agent, orgId, conversationId, userText, onDelta: emitDelta }) {
+  // Отмечаем, что клиенту уже ушёл хоть один кусок текста. После этого нельзя
+  // дописывать резервный ответ (каталог/эскалация/другой провайдер) — он склеится
+  // с показанным и получится дублированный/битый ответ (ACM-17).
+  let streamedAny = false;
+  const onDelta = (text) => {
+    streamedAny = true;
+    emitDelta(text);
+  };
+
   const conversation = await conversationsRepo.getConversationForAgent(conversationId, agent.id);
   if (!conversation) throw notFound('Диалог не найден');
 
@@ -266,6 +278,11 @@ export async function handleUserMessage({ agent, orgId, conversationId, userText
         // LLM недоступна (нет/невалидный ключ, лимит). Если вопрос совпал с товарами —
         // отдаём рекомендацию из каталога напрямую, иначе пробрасываем ошибку виджету.
         logger.warn({ err, agentId: agent.id }, 'LLM недоступна при генерации ответа');
+        // Ошибка в середине стрима (часть текста уже у клиента): любой резервный
+        // ответ дописался бы к показанному → пробрасываем как stream-error (ACM-17).
+        if (streamedAny) {
+          throw err;
+        }
         if (!fullText && productMatches.length > 0) {
           fullText = formatProductRecommendation(productMatches);
           onDelta(fullText);
