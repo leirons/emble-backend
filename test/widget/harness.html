@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Emble embed.js verification harness</title>
+  <!--
+    Self-contained verification harness for ACM-11.
+    Mocks the widget API entirely in-page, so it runs with NO backend from file:// or any host.
+
+    Query params (all optional):
+      pos=left|right          widget position (default right)
+      mode=ok|noconfig|offline|privatemode
+                              ok         -> normal config + working API (default)
+                              noconfig   -> GET /config rejects (server 500 / missing config)
+                              offline    -> every fetch rejects (no network)
+                              privatemode-> localStorage throws on access (Safari private / blocked storage)
+      open=1                  auto-open the panel after boot
+      send=<text>            auto-open, type <text>, and send it (exercises streaming chat)
+
+    Host-page probe: the page paints its own content and CSS variables. If the widget
+    "breaks the host page", the red/green probe boxes below would shift, recolor, or vanish.
+  -->
+  <style>
+    /* Deliberately aggressive host-page styles to prove Shadow DOM isolation.
+       If the widget leaked styles, these globals would bleed INTO it and vice-versa. */
+    * { box-sizing: border-box; }
+    div { color: #b91c1c !important; font-family: "Comic Sans MS", cursive; }
+    button { background: #16a34a !important; border: 3px dashed magenta !important; }
+    body { margin: 0; padding: 24px; background: #f5f5f4; font-family: Georgia, serif; }
+    .host-probe { padding: 16px; border: 2px solid #b91c1c; border-radius: 8px; max-width: 640px; }
+    .host-probe h1 { margin: 0 0 8px; }
+    .host-probe button { padding: 8px 14px; }
+  </style>
+</head>
+<body>
+  <div class="host-probe">
+    <h1>Host page (isolation probe)</h1>
+    <p>This box uses <code>color:#b91c1c !important</code>, Comic Sans, and green/magenta buttons.
+       The Emble widget must remain unaffected by these, and must not leak its dark theme into this box.</p>
+    <button>Host button — stays green/magenta</button>
+  </div>
+
+  <script>
+    // ---- Read scenario from query string ----
+    var q = new URLSearchParams(location.search);
+    var MODE = q.get('mode') || 'ok';
+    var POS = q.get('pos') === 'left' ? 'bottom-left' : 'bottom-right';
+    var AUTO_OPEN = q.get('open') === '1' || q.has('send');
+    var AUTO_SEND = q.get('send');
+
+    // ---- Private-mode simulation: make localStorage throw on access ----
+    if (MODE === 'privatemode') {
+      try {
+        Object.defineProperty(window, 'localStorage', {
+          configurable: true,
+          get: function () { throw new Error('localStorage is disabled (simulated private mode)'); }
+        });
+      } catch (e) { /* ignore */ }
+    }
+
+    // ---- Mock config the widget expects from GET /config ----
+    var MOCK_CONFIG = {
+      agent: { name: 'Acme Support' },
+      branding: {
+        brandColor: '#c9105f',
+        position: POS,
+        greeting: 'Hi! 👋 How can we help you today?',
+        quickReplies: ['Track my order', 'Return policy', 'Talk to a human']
+      },
+      settings: { emailFallbackEnabled: true, proactiveEnabled: false },
+      hasStartFlow: false,
+      startMenu: { enabled: false, items: [] },
+      faq: [{ question: 'Do you ship internationally?', answer: 'Yes, worldwide.' }]
+    };
+
+    function jsonResponse(obj) {
+      return new Response(JSON.stringify(obj), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // ---- SSE stream so the chat path renders a real streamed answer ----
+    function sseResponse(text, messageId) {
+      var frames = [];
+      text.split(' ').forEach(function (w, i) {
+        frames.push('event: delta\ndata: ' + JSON.stringify({ text: (i ? ' ' : '') + w }) + '\n\n');
+      });
+      frames.push('event: done\ndata: ' + JSON.stringify({ messageId: messageId || 'm1' }) + '\n\n');
+      var enc = new TextEncoder();
+      var i = 0;
+      var stream = new ReadableStream({
+        pull: function (c) {
+          if (i < frames.length) { c.enqueue(enc.encode(frames[i++])); }
+          else { c.close(); }
+        }
+      });
+      return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+    }
+
+    // ---- Install the mock fetch ----
+    var realFetch = window.fetch.bind(window);
+    window.fetch = function (url, opts) {
+      url = String(url);
+      if (MODE === 'offline') {
+        return Promise.reject(new TypeError('Failed to fetch (simulated offline)'));
+      }
+      if (/\/config(\?|$)/.test(url)) {
+        if (MODE === 'noconfig') return Promise.reject(new TypeError('config unavailable (simulated 500)'));
+        return Promise.resolve(jsonResponse(MOCK_CONFIG));
+      }
+      if (/\/conversations$/.test(url)) return Promise.resolve(jsonResponse({ conversationId: 'c_demo' }));
+      if (/\/messages$/.test(url)) return Promise.resolve(sseResponse('Sure! Your order #1042 is out for delivery today. 📦'));
+      if (/\/events$/.test(url) || /\/leads$/.test(url) || /\/feedback$/.test(url) || /\/flow\/advance$/.test(url)) {
+        return Promise.resolve(jsonResponse({ ok: true }));
+      }
+      return Promise.resolve(jsonResponse({ ok: true }));
+    };
+    // sendBeacon is used for analytics; stub it so private/offline modes don't hit the network.
+    try { navigator.sendBeacon = function () { return true; }; } catch (e) {}
+
+    // ---- Capture widget console output for the automated report ----
+    window.__embleLog = [];
+    ['error', 'warn'].forEach(function (level) {
+      var orig = console[level].bind(console);
+      console[level] = function () {
+        window.__embleLog.push(level + ': ' + Array.prototype.join.call(arguments, ' '));
+        orig.apply(null, arguments);
+      };
+    });
+
+    // ---- Drive the widget once it has booted (for screenshots / auto flows) ----
+    function root() { return document.getElementById('emble-widget-root'); }
+    function sr() { var r = root(); return r && r.shadowRoot; }
+
+    function waitFor(sel, cb, tries) {
+      tries = tries == null ? 60 : tries;
+      var s = sr();
+      var node = s && s.querySelector(sel);
+      if (node) return cb(node);
+      if (tries <= 0) return;
+      setTimeout(function () { waitFor(sel, cb, tries - 1); }, 50);
+    }
+
+    if (AUTO_OPEN) {
+      waitFor('.emble-launcher', function (launcher) {
+        launcher.click();
+        if (AUTO_SEND) {
+          waitFor('.emble-input', function (input) {
+            input.value = AUTO_SEND;
+            sr().querySelector('.emble-send').click();
+          });
+        }
+      });
+    }
+  </script>
+
+  <!-- One-line install, exactly as documented (async, data-agent, no data-api -> API auto-detected from src) -->
+  <script src="../../public/embed.js" data-agent="agent-demo" async></script>
+</body>
+</html>
