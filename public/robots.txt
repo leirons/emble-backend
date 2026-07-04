@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard.html
+Disallow: /widget-demo.html
+
+Sitemap: https://emble-backend.vercel.app/sitemap.xml
