@@ -6,6 +6,74 @@
 (function () {
   'use strict';
 
+  // ---------- контраст текста (ACM-34) ----------
+  // Чистые, независимые от DOM утилиты: подбирают цвет текста, гарантированно
+  // читаемый поверх произвольного цвета фона (WCAG AA, >= 4.5:1 / >= 3:1 для крупного).
+  var TEXT_DARK = '#1A1A1A';
+  var TEXT_LIGHT = '#FFFFFF';
+
+  // Разбираем строку цвета (#rgb, #rrggbb, rgb()/rgba()) в [r,g,b] 0..255. null — если не распознали.
+  function parseColorToRgb(input) {
+    if (typeof input !== 'string') return null;
+    var s = input.trim().toLowerCase();
+    var m;
+    if ((m = /^#([0-9a-f]{3})$/.exec(s))) {
+      return [parseInt(m[1][0] + m[1][0], 16), parseInt(m[1][1] + m[1][1], 16), parseInt(m[1][2] + m[1][2], 16)];
+    }
+    if ((m = /^#([0-9a-f]{6})$/.exec(s))) {
+      return [parseInt(m[1].slice(0, 2), 16), parseInt(m[1].slice(2, 4), 16), parseInt(m[1].slice(4, 6), 16)];
+    }
+    if ((m = /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/.exec(s))) {
+      var r = +m[1], g = +m[2], b = +m[3];
+      if (r > 255 || g > 255 || b > 255) return null;
+      return [r, g, b];
+    }
+    return null;
+  }
+
+  // Относительная яркость по WCAG: линеаризуем каналы sRGB, затем взвешенная сумма.
+  function relativeLuminance(rgb) {
+    var lin = rgb.map(function (v) {
+      var c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+  }
+
+  // Коэффициент контраста между двумя значениями яркости (>= 1).
+  function contrastRatio(l1, l2) {
+    var hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+
+  // Возвращает более контрастный к фону вариант из пары { hex, ratio }.
+  function betterOf(L, darkHex, lightHex) {
+    var d = contrastRatio(L, relativeLuminance(parseColorToRgb(darkHex)));
+    var l = contrastRatio(L, relativeLuminance(parseColorToRgb(lightHex)));
+    return d >= l ? { hex: darkHex, ratio: d } : { hex: lightHex, ratio: l };
+  }
+
+  // Выбираем тёмный (#1A1A1A) или светлый (#FFFFFF) текст — тот, что даёт больший контраст к фону.
+  // Для почти всех реальных цветов бренда лучший из этих токенов уже даёт >= 4.5:1. Узкая
+  // серединно-серая зона (L≈0.18) — исключение: там #1A1A1A даёт лишь ~4.4:1, поэтому усиливаем
+  // тёмный до чистого чёрного (#000000), который вместе с белым всегда гарантирует >= 4.58:1.
+  // Фон не распознан — возвращаем безопасный тёмный текст.
+  function getAccessibleTextColor(bg) {
+    var rgb = parseColorToRgb(bg);
+    if (!rgb) return TEXT_DARK;
+    var L = relativeLuminance(rgb);
+    var pick = betterOf(L, TEXT_DARK, TEXT_LIGHT);
+    if (pick.ratio < 4.5) pick = betterOf(L, '#000000', TEXT_LIGHT);
+    return pick.hex;
+  }
+
+  // Экспорт для юнит-тестов в Node — до любого обращения к DOM.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { getAccessibleTextColor: getAccessibleTextColor, parseColorToRgb: parseColorToRgb, relativeLuminance: relativeLuminance, contrastRatio: contrastRatio };
+  }
+  // Вне браузера (тесты) дальше идёт только UI — прекращаем инициализацию.
+  if (typeof document === 'undefined') return;
+
   var scriptTag = document.currentScript || (function () {
     var scripts = document.getElementsByTagName('script');
     return scripts[scripts.length - 1];
@@ -127,10 +195,14 @@
   var shadow = root.attachShadow ? root.attachShadow({ mode: 'open' }) : root;
 
   function css(brand) {
+    // ACM-34: --widget-bg — цвет-фон бренда, --widget-text — контрастный к нему цвет текста/иконок.
+    // Текст больше НЕ рендерится цветом фона: везде поверх бренда используется var(--widget-text).
+    var fg = getAccessibleTextColor(brand);
     return (
       ':host, .emble-root { all: initial; }' +
+      ':host { --widget-bg:' + brand + '; --widget-text:' + fg + '; }' +
       '.emble-launcher { position: fixed; ' + posCss() + ' width: 56px; height: 56px; border-radius: 50%; ' +
-      'background:' + brand + '; box-shadow: 0 12px 28px rgba(0,0,0,.35); cursor: pointer; display:flex; ' +
+      'background: var(--widget-bg); color: var(--widget-text); box-shadow: 0 12px 28px rgba(0,0,0,.35); cursor: pointer; display:flex; ' +
       'align-items:center; justify-content:center; z-index: 2147483000; transition: transform .15s ease; }' +
       '.emble-launcher:hover { transform: scale(1.06); }' +
       '.emble-panel { position: fixed; ' + panelPosCss() + ' width: 340px; max-width: calc(100vw - 32px); ' +
@@ -138,9 +210,9 @@
       'background: #11151F; box-shadow: 0 24px 60px rgba(0,0,0,.5); display: none; flex-direction: column; ' +
       'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; z-index: 2147483000; }' +
       '.emble-panel.open { display: flex; }' +
-      '.emble-header { padding: 14px 16px; display:flex; align-items:center; gap:10px; background:' + brand + '; }' +
-      '.emble-header .name { color:#fff; font-weight:600; font-size:14px; }' +
-      '.emble-header .status { color:rgba(255,255,255,.85); font-size:11.5px; display:flex; align-items:center; gap:4px; }' +
+      '.emble-header { padding: 14px 16px; display:flex; align-items:center; gap:10px; background: var(--widget-bg); }' +
+      '.emble-header .name { color: var(--widget-text); font-weight:600; font-size:14px; }' +
+      '.emble-header .status { color: var(--widget-text); opacity:.85; font-size:11.5px; display:flex; align-items:center; gap:4px; }' +
       '.emble-status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#10B981; animation: emble-pulse 2s ease-in-out infinite; flex-shrink:0; }' +
       '@keyframes emble-pulse { 0%,100%{ opacity:1; } 50%{ opacity:.35; } }' +
       '.emble-typing { display:flex; align-items:center; gap:4px; padding:12px 14px; }' +
@@ -148,14 +220,14 @@
       '.emble-typing-dot:nth-child(2){ animation-delay:.2s; }' +
       '.emble-typing-dot:nth-child(3){ animation-delay:.4s; }' +
       '@keyframes emble-bounce { 0%,60%,100%{ transform:translateY(0); opacity:.35; } 30%{ transform:translateY(-6px); opacity:.9; } }' +
-      '.emble-close { margin-left:auto; cursor:pointer; color:#fff; opacity:.85; font-size:18px; line-height:1; background:none; border:none; }' +
-      '.emble-back { cursor:pointer; color:#fff; opacity:.9; font-size:24px; line-height:1; background:none; border:none; padding:0 6px 3px 0; }' +
+      '.emble-close { margin-left:auto; cursor:pointer; color: var(--widget-text); opacity:.85; font-size:18px; line-height:1; background:none; border:none; }' +
+      '.emble-back { cursor:pointer; color: var(--widget-text); opacity:.9; font-size:24px; line-height:1; background:none; border:none; padding:0 6px 3px 0; }' +
       '.emble-home { flex:1; overflow-y:auto; padding:16px 14px; display:none; flex-direction:column; gap:10px; }' +
       '.emble-home.show { display:flex; }' +
       '.emble-home-greeting { font-size:13px; line-height:1.45; color:#D8DBE3; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.06); padding:10px 13px; border-radius:4px 14px 14px 14px; margin-bottom:4px; }' +
       '.emble-menu-card { display:flex; align-items:center; gap:12px; padding:14px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); cursor:pointer; transition:background .12s ease; }' +
       '.emble-menu-card:hover { background:rgba(255,255,255,.08); }' +
-      '.emble-menu-ic { width:34px; height:34px; border-radius:10px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:' + brand + '; }' +
+      '.emble-menu-ic { width:34px; height:34px; border-radius:10px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; background: var(--widget-bg); color: var(--widget-text); }' +
       '.emble-menu-tx { flex:1; color:#E5E7EB; font-size:13.5px; font-weight:600; }' +
       '.emble-menu-chev { color:#5B6472; font-size:18px; }' +
       '.emble-info { flex:1; overflow-y:auto; padding:14px; display:none; flex-direction:column; }' +
@@ -191,14 +263,14 @@
       '.emble-home::-webkit-scrollbar, .emble-info::-webkit-scrollbar, .emble-body::-webkit-scrollbar { width:0; height:0; }' +
       '.emble-msg { max-width:82%; padding:9px 12px; border-radius:4px 14px 14px 14px; font-size:13px; ' +
       'line-height:1.45; color:#D8DBE3; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.06); align-self:flex-start; white-space:pre-wrap; }' +
-      '.emble-msg.user { align-self:flex-end; background:' + brand + '; color:#fff; border-color:transparent; border-radius:14px 4px 14px 14px; }' +
+      '.emble-msg.user { align-self:flex-end; background: var(--widget-bg); color: var(--widget-text); border-color:transparent; border-radius:14px 4px 14px 14px; }' +
       '.emble-quick { display:flex; flex-wrap:wrap; gap:7px; padding: 0 14px 10px; }' +
       '.emble-chip { font-size:12px; padding:7px 11px; border-radius:999px; border:1px solid ' + brand + '; ' +
       'color:' + brand + '; background: transparent; cursor:pointer; }' +
       '.emble-footer { display:flex; align-items:center; gap:8px; padding:12px 14px; border-top:1px solid rgba(255,255,255,.08); }' +
       '.emble-input { flex:1; height:38px; border-radius:10px; background:rgba(255,255,255,.04); ' +
       'border:1px solid rgba(255,255,255,.12); color:#E5E7EB; padding:0 12px; font-size:13px; outline:none; }' +
-      '.emble-send { width:38px; height:38px; border-radius:10px; background:' + brand + '; border:none; ' +
+      '.emble-send { width:38px; height:38px; border-radius:10px; background: var(--widget-bg); color: var(--widget-text); border:none; ' +
       'cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }' +
       '.emble-powered { text-align:center; font-size:10.5px; color:#5B6472; padding:4px 0 8px; }' +
       '.emble-fb-row { display:flex; gap:6px; margin-top:4px; }' +
@@ -229,13 +301,13 @@
     togglePanel();
   } }, []);
   launcher.innerHTML =
-    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H9l-5 4V5z" fill="#fff"/></svg>';
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H9l-5 4V5z" fill="currentColor"/></svg>';
 
   var messagesEl = el('div', { class: 'emble-body' });
   var quickEl = el('div', { class: 'emble-quick' });
   var inputEl = el('input', { class: 'emble-input', placeholder: 'Напишите сообщение…' });
   var sendBtn = el('button', { class: 'emble-send', onClick: onSend });
-  sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="#fff"/></svg>';
+  sendBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="currentColor"/></svg>';
   // Ручной ввод email посетителем → source='manual' (отличается от авто-фолбэка бота 'email_fallback').
   var emailLinkBtn = el('button', { class: 'emble-email-link', title: 'Оставить email', onClick: function () { showEmailForm({ source: 'manual' }); } }, ['✉']);
 
@@ -562,7 +634,7 @@
     var emailInput = el('input', { class: 'emble-input', type: 'email', placeholder: 'Ваш email' });
     var submit = function () { submitEmailFallback(emailInput.value, formEl, source, successText); };
     var confirmBtn = el('button', { class: 'emble-send', onClick: submit }, []);
-    confirmBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="#fff"/></svg>';
+    confirmBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="currentColor"/></svg>';
     emailInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
 
     var rows = [];
