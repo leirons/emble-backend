@@ -90,7 +90,7 @@ export const LANG_NAMES = {
 };
 
 export function buildSystemPrompt(agent, { contextChunks, qaMatches, productMatches, settings, userText }) {
-  let prompt = agent.systemPrompt || 'Ти — корисний ІІ-асистент на сайті компанії.';
+  let prompt = agent.systemPrompt || 'Ти — корисний ШІ-асистент на сайті компанії.';
 
   if (qaMatches.length > 0) {
     const qaBlock = qaMatches.map((q, i) => `[Q&A ${i + 1}] Вопрос: ${q.question}\nОтвет: ${q.answer}`).join('\n\n');
