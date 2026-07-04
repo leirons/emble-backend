@@ -574,8 +574,27 @@ body.landing {
 .faq-item[open] summary::after { transform: rotate(180deg); }
 .faq-item p { margin: 0; padding: 0 20px 18px; font-size: 14.5px; line-height: 1.65; color: var(--muted); }
 
+/* ===================== Контакти ===================== */
+.contacts-grid {
+  max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+}
+.contact-card {
+  display: flex; align-items: center; gap: 14px; padding: 20px; border-radius: 16px;
+  border: 1px solid var(--border-strong); background: rgba(255, 255, 255, 0.02);
+  text-decoration: none; transition: background .12s ease, border-color .12s ease, transform .12s ease;
+}
+.contact-card:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.16); transform: translateY(-2px); }
+.contact-ic {
+  width: 46px; height: 46px; border-radius: 13px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.contact-meta { display: flex; flex-direction: column; min-width: 0; }
+.contact-label { font-size: 12px; color: var(--muted-2); margin-bottom: 3px; }
+.contact-value { font-size: 15px; font-weight: 600; color: var(--text-strong); word-break: break-word; }
+
 @media (max-width: 900px) {
   .hero h1 { font-size: 38px; }
+  .contacts-grid { grid-template-columns: 1fr; }
   .demo-panel, .constructor, .integration, .playground, .uc-grid { grid-template-columns: 1fr; }
   .formfactor-grid { grid-template-columns: repeat(2, 1fr); }
   .how-grid { grid-template-columns: 1fr; }
