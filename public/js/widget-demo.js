@@ -19,7 +19,7 @@
     s.setAttribute('data-api', apiBase);
     s.async = true;
     document.body.appendChild(s);
-    document.getElementById('hint').textContent = 'Виджет загружен для агента: ' + slug;
+    document.getElementById('hint').textContent = 'Віджет завантажено для агента: ' + slug;
   }
 
   document.getElementById('loadBtn').addEventListener('click', function () {

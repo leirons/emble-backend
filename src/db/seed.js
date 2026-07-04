@@ -44,14 +44,14 @@ async function run() {
     [agentId]
   );
 
-  logger.info({ orgId, userId, agentId, slug }, 'Сид-данные созданы');
-  logger.info('Логин: demo@emble.ai / password123');
+  logger.info({ orgId, userId, agentId, slug }, 'Сид-дані створені');
+  logger.info('Логін: demo@emble.ai / password123');
   logger.info(`Embed-код: <script src="https://cdn.emble.ai/embed.js" data-agent="${slug}" async></script>`);
 
   await pool.end();
 }
 
 run().catch((err) => {
-  logger.error({ err }, 'Ошибка сида');
+  logger.error({ err }, 'Помилка сида');
   process.exit(1);
 });
