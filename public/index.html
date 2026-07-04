@@ -29,8 +29,7 @@
         <a href="#how">Как это работает</a>
       </nav>
       <div class="nav-actions">
-        <a class="link" href="/dashboard.html#login">Войти</a>
-        <a class="btn btn-primary btn-sm" href="/dashboard.html#register">Начать бесплатно</a>
+        <a class="btn btn-primary btn-sm" href="/dashboard.html#login">Войти</a>
       </div>
     </div>
   </header>
@@ -41,7 +40,7 @@
       <h1>Оживите ваш сайт умными<br><span class="grad">ИИ-агентами</span> за 5 минут</h1>
       <p>Настройте логику ИИ, оформите виджет под свой бренд и встройте на сайт одной строкой кода. Без разработчиков и сложных интеграций.</p>
       <div class="hero-ctas">
-        <a class="btn btn-primary" href="/dashboard.html#register">Создать агента бесплатно</a>
+        <a class="btn btn-primary" href="/dashboard.html#login">Войти в панель</a>
         <a class="btn btn-ghost" href="#how">Как это работает</a>
       </div>
     </div>
@@ -211,6 +210,50 @@
     </div>
   </section>
 
+  <section id="playground" class="section playground-section">
+    <div class="section-head center">
+      <div class="eyebrow">Живая песочница</div>
+      <h2>Покрутите виджет прямо здесь</h2>
+      <p>Переключайте форму, положение, тему и акцент — окно браузера обновляется мгновенно, как на реальном сайте.</p>
+    </div>
+    <div class="playground">
+      <div class="pg-controls">
+        <div class="pg-group"><div class="pg-glabel">Форма</div><div class="pg-list" id="pgForm"></div></div>
+        <div class="pg-group"><div class="pg-glabel">Положение</div><div class="pg-inline-ctl" id="pgPos"></div></div>
+        <div class="pg-group"><div class="pg-glabel">Тема сайта</div><div class="pg-inline-ctl" id="pgTheme"></div></div>
+        <div class="pg-group"><div class="pg-glabel">Акцент</div><div class="pg-accents" id="pgAccent"></div></div>
+        <div class="pg-switch-row">
+          <span class="pg-switch-label">Виджет открыт</span>
+          <button class="pg-switch" id="pgToggle" type="button"><span class="pg-knob"></span></button>
+        </div>
+      </div>
+      <div class="pg-stage">
+        <div class="pg-browser" id="pgBrowser">
+          <div class="pg-chrome" id="pgChrome">
+            <span class="pg-tdot" style="background:#FF5F57;"></span>
+            <span class="pg-tdot" style="background:#FEBC2E;"></span>
+            <span class="pg-tdot" style="background:#28C840;"></span>
+            <span class="pg-url" id="pgUrl">yourwebsite.com</span>
+          </div>
+          <div class="pg-page" id="pgPage"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="usecases" class="section usecases-section">
+    <div class="section-head center">
+      <div class="eyebrow violet">Сценарии в действии</div>
+      <h2>Не просто чат — он решает задачи</h2>
+      <p>Агент рекомендует товары, отслеживает доставку и квалифицирует лиды прямо в диалоге.</p>
+    </div>
+    <div class="uc-tabs" id="ucTabs"></div>
+    <div class="uc-grid">
+      <div class="uc-narrative" id="ucNarrative"></div>
+      <div class="uc-chat" id="ucChat"></div>
+    </div>
+  </section>
+
   <section id="code" class="section">
     <div class="integration">
       <div>
@@ -282,9 +325,9 @@
     <div class="cta-box">
       <div class="glow" style="top:-120px; left:50%; transform:translateX(-50%); width:600px; height:400px; background:radial-gradient(closest-side, rgba(99,102,241,0.3), transparent 70%);"></div>
       <div style="position:relative;">
-        <h2>Запустите своего ИИ-агента сегодня</h2>
-        <p>Бесплатный тариф навсегда. Без карты, без кода, без разработчиков.</p>
-        <a class="btn btn-primary" href="/dashboard.html#register">Создать агента бесплатно</a>
+        <h2>Управляйте своими ИИ-агентами</h2>
+        <p>Войдите в панель по вашему логину и паролю — создавайте, настраивайте и встраивайте агентов на свой сайт.</p>
+        <a class="btn btn-primary" href="/dashboard.html#login">Войти в панель</a>
       </div>
     </div>
   </section>

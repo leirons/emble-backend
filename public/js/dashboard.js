@@ -54,7 +54,8 @@
   }
   tabLogin.addEventListener('click', () => setAuthTab('login'));
   tabRegister.addEventListener('click', () => setAuthTab('register'));
-  setAuthTab(location.hash === '#register' ? 'register' : 'login');
+  // Регистрация отключена — всегда показываем форму входа, даже при #register в URL.
+  setAuthTab('login');
 
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
