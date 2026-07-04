@@ -95,6 +95,8 @@ export const settingsSchema = z.object({
   escalationKeywords: z.array(z.string().min(1).max(60)).max(20).optional(),
   autoLanguage: z.boolean().optional(),
   emailFallbackEnabled: z.boolean().optional(),
+  // Что собирает форма захвата лида: email или телефон.
+  leadContactType: z.enum(['email', 'phone']).optional(),
   // Сбор email при эскалации на оператора: тумблер + кастомное сообщение.
   enableEmailOnEscalation: z.boolean().optional(),
   escalationEmailMessage: z.string().max(500).optional(),

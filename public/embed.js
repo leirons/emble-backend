@@ -359,9 +359,8 @@
   function showHome() {
     if (!hasStartMenu()) return;
     homeEl.innerHTML = '';
-    if (STATE.greeting) {
-      homeEl.appendChild(el('div', { class: 'emble-home-greeting' }, [STATE.greeting]));
-    }
+    // Приветствие на стартовом экране НЕ показываем — оно появляется первым сообщением
+    // при входе в чат (см. showChatView), чтобы не дублироваться на home-экране меню.
     (STATE.startMenu.items || []).forEach(function (item) {
       var card = el('div', { class: 'emble-menu-card', onClick: function () { openMenuItem(item); } }, []);
       var ic = el('span', { class: 'emble-menu-ic' });
@@ -566,7 +565,13 @@
       quickEl.appendChild(
         el('span', { class: 'emble-chip', onClick: function () {
           appendMessage('user', btn.label);
-          advanceFlow(btn.nextStepId, btn.label);
+          // Кнопка сценария может уводить разговор к ИИ (флаг handoffToAI или отсутствие
+          // nextStepId) — тогда шлём её текст ассистенту, а не продвигаем ветку сценария.
+          if (btn.handoffToAI || !btn.nextStepId) {
+            sendText(btn.label, { skipEcho: true });
+          } else {
+            advanceFlow(btn.nextStepId, btn.label);
+          }
         } }, [btn.label])
       );
     });
@@ -627,34 +632,40 @@
     if (!STATE.open) togglePanel();
     if (STATE.view !== 'chat') showChatView();
 
+    // Что собираем — email или телефон — задаёт владелец в настройках агента (leadContactType).
+    var isPhone = ((STATE.settings && STATE.settings.leadContactType) || 'email') === 'phone';
     var source = opts.source || 'email_fallback';
-    var successText = opts.success || 'Спасибо! Мы свяжемся с вами по email.';
-    var promptText = opts.prompt != null ? opts.prompt : 'Оставьте email — мы напишем вам, если бот не сможет помочь.';
+    var successText = opts.success || (isPhone ? 'Спасибо! Мы свяжемся с вами по телефону.' : 'Спасибо! Мы свяжемся с вами по email.');
+    var promptText = opts.prompt != null ? opts.prompt : (isPhone
+      ? 'Оставьте телефон — мы свяжемся с вами, если бот не сможет помочь.'
+      : 'Оставьте email — мы напишем вам, если бот не сможет помочь.');
 
-    var emailInput = el('input', { class: 'emble-input', type: 'email', placeholder: 'Ваш email' });
-    var submit = function () { submitEmailFallback(emailInput.value, formEl, source, successText); };
+    var contactInput = el('input', { class: 'emble-input', type: isPhone ? 'tel' : 'email', placeholder: isPhone ? 'Ваш телефон' : 'Ваш email' });
+    var submit = function () { submitLeadContact(contactInput.value, formEl, source, successText, isPhone); };
     var confirmBtn = el('button', { class: 'emble-send', onClick: submit }, []);
     confirmBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="currentColor"/></svg>';
-    emailInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+    contactInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
 
     var rows = [];
     if (promptText) rows.push(el('div', { style: 'font-size:12px; color:#9CA3AF; margin-bottom:8px;' }, [promptText]));
-    rows.push(el('div', { style: 'display:flex; gap:8px;' }, [emailInput, confirmBtn]));
+    rows.push(el('div', { style: 'display:flex; gap:8px;' }, [contactInput, confirmBtn]));
     var formEl = el('div', { class: 'emble-email-form' }, rows);
     messagesEl.appendChild(formEl);
     messagesEl.scrollTop = messagesEl.scrollHeight;
-    try { emailInput.focus(); } catch (e) {}
+    try { contactInput.focus(); } catch (e) {}
   }
 
-  async function submitEmailFallback(email, formEl, source, successText) {
-    if (!email || email.indexOf('@') === -1) return;
+  async function submitLeadContact(value, formEl, source, successText, isPhone) {
+    value = (value || '').trim();
+    // email — по наличию '@'; телефон — минимум 6 цифр (терпимо к +, пробелам, скобкам).
+    var valid = isPhone ? value.replace(/\D/g, '').length >= 6 : value.indexOf('@') !== -1;
+    if (!valid) return;
+    var payload = { conversationId: STATE.conversationId, capturedFields: { source: source || 'email_fallback' } };
+    if (isPhone) payload.phone = value; else payload.email = value;
     try {
-      await api('/leads', {
-        method: 'POST',
-        body: JSON.stringify({ email: email, conversationId: STATE.conversationId, capturedFields: { source: source || 'email_fallback' } }),
-      });
+      await api('/leads', { method: 'POST', body: JSON.stringify(payload) });
       formEl.remove();
-      appendMessage('assistant', successText || 'Спасибо! Мы свяжемся с вами по email.');
+      appendMessage('assistant', successText || 'Спасибо! Мы свяжемся с вами.');
     } catch (e) {
       /* оставляем форму — пользователь может попробовать снова */
     }
@@ -835,6 +846,8 @@
     STATE.greeting = computeGreeting();
 
     if (!STATE.settings.emailFallbackEnabled) emailLinkBtn.style.display = 'none';
+    // Подсказка кнопки ручного ввода контакта — под выбранный тип (email/телефон).
+    emailLinkBtn.title = STATE.settings.leadContactType === 'phone' ? 'Оставить телефон' : 'Оставить email';
 
     // Приветствие и быстрые ответы показываются при входе в чат (showChatView) —
     // чтобы не мелькать под домашним экраном стартового меню.

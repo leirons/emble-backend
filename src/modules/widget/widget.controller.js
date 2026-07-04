@@ -46,6 +46,8 @@ export async function getConfig(req, res) {
           proactiveMessage: settings.proactiveMessage,
           proactiveDelaySeconds: settings.proactiveDelaySeconds,
           emailFallbackEnabled: settings.emailFallbackEnabled,
+          // Тип контакта для формы захвата лида: 'email' | 'phone'.
+          leadContactType: settings.leadContactType,
           // Сбор email при эскалации на оператора.
           enableEmailOnEscalation: settings.enableEmailOnEscalation,
           escalationEmailMessage: settings.escalationEmailMessage,

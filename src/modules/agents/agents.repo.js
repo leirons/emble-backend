@@ -169,7 +169,8 @@ const SETTINGS_COLUMNS = `
   proactive_delay_seconds AS "proactiveDelaySeconds", exit_intent_enabled AS "exitIntentEnabled",
   exit_intent_message AS "exitIntentMessage", escalation_enabled AS "escalationEnabled",
   escalation_keywords AS "escalationKeywords", auto_language AS "autoLanguage",
-  email_fallback_enabled AS "emailFallbackEnabled", openai_api_key AS "openaiApiKey",
+  email_fallback_enabled AS "emailFallbackEnabled", lead_contact_type AS "leadContactType",
+  openai_api_key AS "openaiApiKey",
   enable_email_on_escalation AS "enableEmailOnEscalation", escalation_email_message AS "escalationEmailMessage",
   enable_returning_greeting AS "enableReturningGreeting", greeting_new AS "greetingNew",
   greeting_returning AS "greetingReturning", updated_at AS "updatedAt"
@@ -199,6 +200,7 @@ export async function updateSettings(agentId, fields) {
     'escalation_keywords',
     'auto_language',
     'email_fallback_enabled',
+    'lead_contact_type',
     'openai_api_key',
     'enable_email_on_escalation',
     'escalation_email_message',
@@ -216,6 +218,7 @@ export async function updateSettings(agentId, fields) {
     escalation_keywords: fields.escalationKeywords,
     auto_language: fields.autoLanguage,
     email_fallback_enabled: fields.emailFallbackEnabled,
+    lead_contact_type: fields.leadContactType,
     // пустую строку трактуем как сброс ключа (NULL)
     openai_api_key: fields.openaiApiKey === '' ? null : fields.openaiApiKey,
     enable_email_on_escalation: fields.enableEmailOnEscalation,

@@ -1793,8 +1793,15 @@
           </div>
 
           <div class="toggle-row">
-            <div><div class="label">Email-фоллбек</div><div class="desc">Показывать форму «оставьте email», если бот не справился</div></div>
+            <div><div class="label">Сбор контакта (фоллбек)</div><div class="desc">Показывать форму «оставьте контакт», если бот не справился</div></div>
             <label class="switch"><input type="checkbox" id="setEmailFallback" ${s.emailFallbackEnabled ? 'checked' : ''}><span class="track"></span></label>
+          </div>
+          <div class="field">
+            <label>Что собирать в форме захвата</label>
+            <select id="setLeadContactType">
+              <option value="email" ${(s.leadContactType || 'email') === 'email' ? 'selected' : ''}>Email</option>
+              <option value="phone" ${s.leadContactType === 'phone' ? 'selected' : ''}>Телефон</option>
+            </select>
           </div>
 
           <button type="button" class="btn btn-primary btn-sm" id="settingsSaveBtn" style="margin-top:14px;">Сохранить настройки</button>
@@ -1824,6 +1831,7 @@
               escalationEmailMessage: document.getElementById('setEscEmailMsg').value.trim() || undefined,
               autoLanguage: document.getElementById('setAutoLang').checked,
               emailFallbackEnabled: document.getElementById('setEmailFallback').checked,
+              leadContactType: document.getElementById('setLeadContactType').value,
             });
             toast('Настройки сохранены');
           } catch (err) {

@@ -123,7 +123,7 @@ export async function advanceConversationFlow(agent, conversationId, stepId) {
   await conversationsRepo.setFlowState(conversationId, agent.id, flow.id, targetStepId);
   return {
     message: step.message,
-    buttons: (step.buttons || []).map((b) => ({ label: b.label, nextStepId: b.nextStepId })),
+    buttons: (step.buttons || []).map((b) => ({ label: b.label, nextStepId: b.nextStepId, handoffToAI: !!b.handoffToAI })),
     handoffToAI: false,
   };
 }

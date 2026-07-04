@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 const buttonSchema = z.object({
   label: z.string().min(1).max(80),
-  nextStepId: z.string().min(1).max(64),
+  // Кнопка либо ведёт на следующий шаг сценария (nextStepId), либо уводит разговор
+  // к ИИ (handoffToAI) — тогда её текст отправляется ассистенту как вопрос пользователя.
+  nextStepId: z.string().min(1).max(64).optional(),
+  handoffToAI: z.boolean().default(false),
 });
 
 const stepSchema = z.object({
@@ -29,11 +32,18 @@ const definitionSchema = z
     }
     for (const [stepId, step] of Object.entries(data.steps)) {
       step.buttons.forEach((btn, i) => {
-        if (!data.steps[btn.nextStepId]) {
+        if (btn.nextStepId && !data.steps[btn.nextStepId]) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: `Шаг "${stepId}": кнопка "${btn.label}" ссылается на несуществующий nextStepId "${btn.nextStepId}"`,
             path: ['steps', stepId, 'buttons', i, 'nextStepId'],
+          });
+        }
+        if (!btn.nextStepId && !btn.handoffToAI) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Шаг "${stepId}": кнопка "${btn.label}" должна задавать либо nextStepId, либо handoffToAI`,
+            path: ['steps', stepId, 'buttons', i],
           });
         }
       });
