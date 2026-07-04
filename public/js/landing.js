@@ -390,20 +390,22 @@
 
   const copyBtn = document.getElementById('copyCodeBtn');
   const copyLabel = document.getElementById('copyCodeLabel');
-  copyBtn.addEventListener('click', () => {
-    const tag = 'scr' + 'ipt';
-    const code = `<${tag} src="https://cdn.emble.ai/embed.js" data-agent="agent-x9f2c" async></${tag}>`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(code).catch(() => {});
-    }
-    copyBtn.classList.add('copied');
-    copyLabel.textContent = TRANSLATIONS[lang].copied;
-    clearTimeout(copyBtn._t);
-    copyBtn._t = setTimeout(() => {
-      copyBtn.classList.remove('copied');
-      copyLabel.textContent = TRANSLATIONS[lang].copy_code;
-    }, 1800);
-  });
+  if (copyBtn && copyLabel) {
+    copyBtn.addEventListener('click', () => {
+      const tag = 'scr' + 'ipt';
+      const code = `<${tag} src="https://cdn.emble.ai/embed.js" data-agent="agent-x9f2c" async></${tag}>`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).catch(() => {});
+      }
+      copyBtn.classList.add('copied');
+      copyLabel.textContent = TRANSLATIONS[lang].copied;
+      clearTimeout(copyBtn._t);
+      copyBtn._t = setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyLabel.textContent = TRANSLATIONS[lang].copy_code;
+      }, 1800);
+    });
+  }
 
   // ---------- Живая песочница ----------
   const SEND_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="#fff"/></svg>';
@@ -605,7 +607,7 @@
     });
 
     // Обновляем копирайты и кнопки
-    copyLabel.textContent = TRANSLATIONS[lang].copy_code;
+    if (copyLabel) copyLabel.textContent = TRANSLATIONS[lang].copy_code;
 
     // Перерисовываем динамические блоки
     renderTemplateList();
