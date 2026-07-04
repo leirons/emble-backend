@@ -150,7 +150,7 @@ function csvToObjects(text) {
 const COLUMN_ALIASES = {
   name: ['name', 'title', 'product_name', 'productname', 'название', 'наименование', 'товар', 'имя', 'продукт'],
   description: ['description', 'desc', 'описание', 'характеристики', 'детали', 'о товаре'],
-  price: ['price', 'cost', 'amount', 'цена', 'стоимость', 'руб'],
+  price: ['price', 'cost', 'amount', 'цена', 'стоимость', 'руб', 'грн', 'uah', 'ціна', 'вартість'],
   currency: ['currency', 'валюта'],
   url: ['url', 'link', 'product_url', 'producturl', 'ссылка', 'урл', 'линк'],
   imageUrl: ['image_url', 'imageurl', 'image', 'thumbnail', 'photo', 'фото', 'изображение', 'картинка'],

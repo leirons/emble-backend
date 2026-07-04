@@ -16,6 +16,11 @@
 <div id="authView" class="auth-wrap">
   <div class="glow" style="top:-160px; left:50%; transform:translateX(-50%); width:700px; height:500px; background:radial-gradient(closest-side, rgba(99,102,241,0.18), transparent 70%); position:fixed;"></div>
   <div class="card auth-card" style="position:relative;">
+    <div class="lang-switcher" style="position:absolute; top:20px; right:20px; display:flex; gap:8px; font-size:13px; font-weight:600; z-index: 10;">
+      <button class="lang-btn lang-btn-ua" style="background:none; border:none; color:#818CF8; cursor:pointer; padding:2px; font-family:inherit;">UA</button>
+      <span style="color:rgba(255,255,255,0.15)">|</span>
+      <button class="lang-btn lang-btn-ru" style="background:none; border:none; color:#6B7280; cursor:pointer; padding:2px; font-family:inherit;">RU</button>
+    </div>
     <a href="/" class="auth-logo" style="text-decoration:none;">
       <div class="brand-logo"><span></span></div>
       <span class="brand-name">Emble</span>
@@ -23,47 +28,47 @@
 
     <!-- Регистрация отключена: доступ выдаётся вручную (логин + пароль). Оставляем только вход. -->
     <div class="auth-tabs" style="display:none;">
-      <button class="auth-tab" id="tabLogin" type="button">Вход</button>
-      <button class="auth-tab" id="tabRegister" type="button">Регистрация</button>
+      <button class="auth-tab" id="tabLogin" type="button" data-i18n="auth_login_tab">Вход</button>
+      <button class="auth-tab" id="tabRegister" type="button" data-i18n="auth_register_tab">Регистрация</button>
     </div>
 
     <div id="loginPane">
-      <h1>С возвращением</h1>
-      <p class="sub">Войдите, чтобы управлять агентами.</p>
+      <h1 data-i18n="auth_login_title">С возвращением</h1>
+      <p class="sub" data-i18n="auth_login_sub">Войдите, чтобы управлять агентами.</p>
       <div id="loginError"></div>
       <form id="loginForm">
         <div class="field">
-          <label for="loginEmail">Email</label>
+          <label for="loginEmail" data-i18n="auth_email">Email</label>
           <input type="email" id="loginEmail" required autocomplete="email">
         </div>
         <div class="field">
-          <label for="loginPassword">Пароль</label>
+          <label for="loginPassword" data-i18n="auth_password">Пароль</label>
           <input type="password" id="loginPassword" required autocomplete="current-password">
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;" id="loginSubmit">Войти</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="loginSubmit" data-i18n="auth_login_btn">Войти</button>
       </form>
-      <div class="auth-foot">Демо-доступ: <b>demo@emble.ai</b> / <b>password123</b> (после <code>npm run seed</code>)</div>
+      <div class="auth-foot"><span data-i18n="auth_demo">Демо-доступ:</span> <b>demo@emble.ai</b> / <b>password123</b> <span data-i18n="auth_seed">(после npm run seed)</span></div>
     </div>
 
     <div id="registerPane" style="display:none;">
-      <h1>Создать аккаунт</h1>
-      <p class="sub">Бесплатный тариф навсегда, без карты.</p>
+      <h1 data-i18n="auth_reg_title">Создать аккаунт</h1>
+      <p class="sub" data-i18n="auth_reg_sub">Бесплатный тариф навсегда, без карты.</p>
       <div id="registerError"></div>
       <form id="registerForm">
         <div class="field">
-          <label for="regOrg">Название организации</label>
+          <label for="regOrg" data-i18n="auth_reg_org">Название организации</label>
           <input type="text" id="regOrg" required minlength="2" maxlength="120">
         </div>
         <div class="field">
-          <label for="regEmail">Email</label>
+          <label for="regEmail" data-i18n="auth_email">Email</label>
           <input type="email" id="regEmail" required autocomplete="email">
         </div>
         <div class="field">
-          <label for="regPassword">Пароль</label>
+          <label for="regPassword" data-i18n="auth_password">Пароль</label>
           <input type="password" id="regPassword" required minlength="8" maxlength="72" autocomplete="new-password">
-          <div class="hint">Минимум 8 символов</div>
+          <div class="hint" data-i18n="auth_reg_pass_hint">Минимум 8 символов</div>
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;" id="registerSubmit">Создать агента бесплатно</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="registerSubmit" data-i18n="auth_reg_btn">Создать агента бесплатно</button>
       </form>
     </div>
   </div>
@@ -77,9 +82,14 @@
         <div class="brand-logo"><span></span></div>
         <span class="brand-name">Emble</span>
       </a>
-      <div class="user-box">
+      <div class="user-box" style="display:flex; align-items:center; gap:16px;">
+        <div class="lang-switcher" style="display:flex; gap:8px; font-size:13px; font-weight:600; margin-right:8px;">
+          <button class="lang-btn lang-btn-ua" style="background:none; border:none; color:#818CF8; cursor:pointer; padding:2px; font-family:inherit;">UA</button>
+          <span style="color:rgba(255,255,255,0.15)">|</span>
+          <button class="lang-btn lang-btn-ru" style="background:none; border:none; color:#6B7280; cursor:pointer; padding:2px; font-family:inherit;">RU</button>
+        </div>
         <span class="org-name" id="userEmailLabel"></span>
-        <button class="btn btn-outline btn-sm" id="logoutBtn">Выйти</button>
+        <button class="btn btn-outline btn-sm" id="logoutBtn" data-i18n="auth_logout">Вийти</button>
       </div>
     </div>
   </nav>
@@ -89,10 +99,10 @@
     <div id="agentsListView">
       <div class="dash-head">
         <div>
-          <h1>Мои агенты</h1>
-          <p>Создайте ИИ-агента и получите код для вставки на сайт.</p>
+          <h1 data-i18n="dash_my_agents">Мої агенти</h1>
+          <p data-i18n="dash_agents_desc">Створіть ІІ-агента та отримайте код для вставки на сайт.</p>
         </div>
-        <button class="btn btn-primary" id="createAgentBtn">+ Создать агента</button>
+        <button class="btn btn-primary" id="createAgentBtn" data-i18n="dash_create_agent">+ Створити агента</button>
       </div>
       <div id="agentsError"></div>
       <div id="agentsGrid" class="agents-grid"></div>
@@ -106,20 +116,20 @@
 <!-- ===================== CREATE AGENT MODAL ===================== -->
 <div id="createModal" class="modal-backdrop" style="display:none;">
   <div class="modal">
-    <h2>Новый агент</h2>
+    <h2 data-i18n="modal_new_agent">Новий агент</h2>
     <div id="createError"></div>
     <form id="createForm">
       <div class="field">
-        <label for="agentName">Название</label>
-        <input type="text" id="agentName" required minlength="2" maxlength="120" placeholder="Например, Поддержка сайта">
+        <label for="agentName" data-i18n="modal_name">Назва</label>
+        <input type="text" id="agentName" required minlength="2" maxlength="120" placeholder="Наприклад, Підтримка сайту" data-i18n-placeholder="modal_name_placeholder">
       </div>
       <div class="field">
-        <label>Шаблон поведения</label>
+        <label data-i18n="modal_template">Шаблон поведінки</label>
         <div class="template-pick" id="templatePick"></div>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn btn-outline" id="cancelCreateBtn">Отмена</button>
-        <button type="submit" class="btn btn-primary" id="createSubmit">Создать</button>
+        <button type="button" class="btn btn-outline" id="cancelCreateBtn" data-i18n="modal_cancel">Скасувати</button>
+        <button type="submit" class="btn btn-primary" id="createSubmit" data-i18n="modal_create">Створити</button>
       </div>
     </form>
   </div>

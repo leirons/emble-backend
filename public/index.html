@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Emble — ИИ-агенты для вашего сайта за 5 минут</title>
+<title data-i18n="page_title">Emble — ІІ-агенти для вашого сайту за 5 хвилин</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -23,34 +23,39 @@
         <span class="brand-name">Emble</span>
       </div>
       <nav class="nav-links">
-        <a href="#templates">Шаблоны</a>
-        <a href="#constructor">Кастомизация</a>
-        <a href="#code">Интеграция</a>
-        <a href="#how">Как это работает</a>
+        <a href="#templates" data-i18n="nav_templates">Шаблони</a>
+        <a href="#constructor" data-i18n="nav_customize">Кастомізація</a>
+        <a href="#code" data-i18n="nav_integration">Інтеграція</a>
+        <a href="#how" data-i18n="nav_how">Як це працює</a>
       </nav>
-      <div class="nav-actions">
-        <a class="btn btn-primary btn-sm" href="/dashboard.html#login">Войти</a>
+      <div class="nav-actions" style="display:flex; align-items:center; gap:16px;">
+        <div class="lang-switcher" style="display:flex; gap:8px; font-size:13px; font-weight:600;">
+          <button id="btnLangUa" class="lang-btn" style="background:none; border:none; color:#818CF8; cursor:pointer; padding:2px; font-family:inherit;">UA</button>
+          <span style="color:rgba(255,255,255,0.15)">|</span>
+          <button id="btnLangRu" class="lang-btn" style="background:none; border:none; color:#6B7280; cursor:pointer; padding:2px; font-family:inherit;">RU</button>
+        </div>
+        <a class="btn btn-primary btn-sm" href="/dashboard.html#login" id="navLoginBtn" data-i18n="nav_login">Увійти</a>
       </div>
     </div>
   </header>
 
   <section class="hero">
     <div class="hero-copy">
-      <div class="badge"><span class="dot"></span> Новое: ИИ-агенты на GPT-4o и Claude</div>
-      <h1>Оживите ваш сайт умными<br><span class="grad">ИИ-агентами</span> за 5 минут</h1>
-      <p>Настройте логику ИИ, оформите виджет под свой бренд и встройте на сайт одной строкой кода. Без разработчиков и сложных интеграций.</p>
+      <div class="badge" id="heroBadge"><span class="dot"></span> <span data-i18n="hero_badge">Нове: ІІ-агенти на GPT-4o та Claude</span></div>
+      <h1 data-i18n="hero_title">Оживіть ваш сайт розумними<br><span class="grad">ІІ-агентами</span> за 5 хвилин</h1>
+      <p data-i18n="hero_desc">Налаштуйте логіку ІІ, оформіть віджет під свій бренд та вбудуйте на сайт одним рядком коду. Без розробників та складних інтеграцій.</p>
       <div class="hero-ctas">
-        <a class="btn btn-primary" href="/dashboard.html#login">Войти в панель</a>
-        <a class="btn btn-ghost" href="#how">Как это работает</a>
+        <a class="btn btn-primary" href="/dashboard.html#login" data-i18n="hero_cta_panel">Увійти в панель</a>
+        <a class="btn btn-ghost" href="#how" data-i18n="hero_cta_how">Як це працює</a>
       </div>
     </div>
 
     <div class="demo-panel">
       <div class="demo-controls">
-        <div class="eyebrow">Шаг 1 · Выбор агента</div>
-        <div class="title">Панель управления виджетом</div>
+        <div class="eyebrow" data-i18n="demo_step1">Крок 1 · Вибір агента</div>
+        <div class="title" data-i18n="demo_title">Панель керування віджетом</div>
         <div class="template-list" id="templateList"></div>
-        <div class="foot"><span class="dot"></span> Изменения применяются к превью мгновенно</div>
+        <div class="foot" id="demoFoot"><span class="dot"></span> <span data-i18n="demo_foot">Зміни застосовуються до прев'ю миттєво</span></div>
       </div>
 
       <div class="demo-preview">
@@ -70,7 +75,7 @@
               <span class="avatar" id="wInitial"></span>
               <span class="meta">
                 <span class="name" id="wName"></span>
-                <span class="status"><span class="dot"></span> онлайн</span>
+                <span class="status"><span class="dot"></span> <span data-i18n="w_status">онлайн</span></span>
               </span>
               <span style="width:22px; height:2px; border-radius:2px; background:rgba(255,255,255,0.6);"></span>
             </div>
@@ -78,7 +83,7 @@
               <div class="widget-greeting" id="wGreeting"></div>
               <div class="widget-chips" id="wChips"></div>
               <div class="widget-input-row">
-                <span class="widget-input">Напишите сообщение…</span>
+                <span class="widget-input" data-i18n="w_input_placeholder">Напишіть повідомлення…</span>
                 <span class="widget-send">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="#fff"/></svg>
                 </span>
@@ -96,9 +101,9 @@
 
   <section id="templates" class="section">
     <div class="section-head">
-      <div class="eyebrow violet">Форм-факторы</div>
-      <h2>Один агент — любой формат</h2>
-      <p>Выберите, как виджет живёт на странице. Логика остаётся прежней — меняется только оболочка.</p>
+      <div class="eyebrow violet" data-i18n="ff_eyebrow">Форм-фактори</div>
+      <h2 data-i18n="ff_title">Один агент — будь-який формат</h2>
+      <p data-i18n="ff_desc">Оберіть, як віджет живе на сторінці. Логіка залишається незмінною — змінюється лише оболонка.</p>
     </div>
     <div class="formfactor-grid">
       <div class="card formfactor-card">
@@ -108,7 +113,7 @@
           <div style="position:absolute; right:12px; bottom:12px; width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#6366F1,#8B5CF6); box-shadow:0 8px 20px rgba(99,102,241,0.5);"></div>
         </div>
         <div class="ftitle">Floating Chat</div>
-        <div class="fdesc">Плавающая кнопка в углу — классика для поддержки на всём сайте.</div>
+        <div class="fdesc" data-i18n="ff_floating_desc">Плаваючий куточок — класика для підтримки на всьому сайті.</div>
       </div>
       <div class="card formfactor-card">
         <div class="formfactor-thumb" style="padding:12px;">
@@ -120,7 +125,7 @@
           <div style="height:6px; width:85%; border-radius:5px; background:rgba(255,255,255,0.05); margin-top:8px;"></div>
         </div>
         <div class="ftitle">Inline Block</div>
-        <div class="fdesc">Встраивается прямо в тело статьи или лендинга как часть контента.</div>
+        <div class="fdesc" data-i18n="ff_inline_desc">Вбудовується прямо в тіло статті чи лендингу як частина контенту.</div>
       </div>
       <div class="card formfactor-card">
         <div class="formfactor-thumb">
@@ -132,7 +137,7 @@
           </div>
         </div>
         <div class="ftitle">Side Panel</div>
-        <div class="fdesc">Выезжающая шторка на пол-экрана для сложных консультаций.</div>
+        <div class="fdesc" data-i18n="ff_side_desc">Панель збоку на пів екрана для складних консультацій.</div>
       </div>
       <div class="card formfactor-card">
         <div class="formfactor-thumb">
@@ -143,7 +148,7 @@
           <div style="position:absolute; right:14px; bottom:12px; width:26px; height:26px; border-radius:50%; background:#34D399;"></div>
         </div>
         <div class="ftitle">Minimal Bubble</div>
-        <div class="fdesc">Ненавязчивое облачко-подсказка без открытого окна чата.</div>
+        <div class="fdesc" data-i18n="ff_minimal_desc">Ненав'язлива хмарка-підказка без відкритого вікна чату.</div>
       </div>
     </div>
   </section>
@@ -151,12 +156,12 @@
   <section id="constructor" class="section">
     <div class="constructor">
       <div class="constructor-controls">
-        <div class="eyebrow">Шаг 2 · Кастомизация</div>
-        <h2>Соберите виджет под свой бренд</h2>
-        <p>Аватар, фирменные цвета, приветствие и быстрые ответы — без единой строки CSS.</p>
+        <div class="eyebrow" data-i18n="custom_step2">Крок 2 · Кастомізація</div>
+        <h2 data-i18n="custom_title">Зберіть віджет під свій бренд</h2>
+        <p data-i18n="custom_desc">Аватар, фірмові кольори, привітання та швидкі відповіді — без жодного рядка CSS.</p>
 
         <div class="ctl-block">
-          <div class="ctl-label">Аватар ассистента</div>
+          <div class="ctl-label" data-i18n="custom_avatar">Аватар асистента</div>
           <div class="avatar-row">
             <span class="avatar-swatch" style="background:linear-gradient(135deg,#6366F1,#8B5CF6); box-shadow:0 0 0 2px #0B0F19, 0 0 0 4px rgba(99,102,241,0.5);"></span>
             <span class="avatar-swatch" style="background:linear-gradient(135deg,#10B981,#34D399);"></span>
@@ -166,22 +171,22 @@
         </div>
 
         <div class="ctl-block">
-          <div class="ctl-label">Фирменный цвет</div>
+          <div class="ctl-label" data-i18n="custom_color">Фірмовий колір</div>
           <div class="color-row" id="colorRow"></div>
         </div>
 
         <div class="ctl-block">
-          <div class="ctl-label">Приветственное сообщение</div>
-          <div class="welcome-box">Здравствуйте! Я ваш ИИ-ассистент. Чем могу помочь сегодня?</div>
+          <div class="ctl-label" data-i18n="custom_welcome">Привітальне повідомлення</div>
+          <div class="welcome-box" data-i18n="custom_welcome_box">Вітаю! Я ваш ІІ-асистент. Чим можу допомогти сьогодні?</div>
         </div>
 
         <div>
-          <div class="ctl-label">Быстрые ответы (Quick Replies)</div>
+          <div class="ctl-label" data-i18n="custom_replies">Швидкі відповіді (Quick Replies)</div>
           <div class="chip-row">
-            <span class="chip-static">Узнать цены</span>
-            <span class="chip-static">Заказать демо</span>
-            <span class="chip-static">Связаться с нами</span>
-            <span class="chip-static chip-add">+ добавить</span>
+            <span class="chip-static" data-i18n="reply_prices">Дізнатись ціни</span>
+            <span class="chip-static" data-i18n="reply_demo">Заказать демо</span>
+            <span class="chip-static" data-i18n="reply_contacts">Зв'язатись з нами</span>
+            <span class="chip-static chip-add" data-i18n="reply_add">+ додати</span>
           </div>
         </div>
       </div>
@@ -191,15 +196,15 @@
           <div style="padding:14px 16px; display:flex; align-items:center; gap:11px;" id="brandPreviewHeader">
             <span style="width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,0.22); display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:15px;">A</span>
             <span style="flex:1;">
-              <span style="display:block; color:#fff; font-weight:600; font-size:14px;">Ваш ассистент</span>
-              <span style="display:block; color:rgba(255,255,255,0.85); font-size:11.5px; margin-top:1px;">на связи</span>
+              <span style="display:block; color:#fff; font-weight:600; font-size:14px;" data-i18n="preview_agent_name">Ваш асистент</span>
+              <span style="display:block; color:rgba(255,255,255,0.85); font-size:11.5px; margin-top:1px;" data-i18n="preview_agent_status">на зв'язку</span>
             </span>
           </div>
           <div style="padding:16px; background:#0E121C;">
-            <div style="max-width:84%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.06); padding:10px 13px; border-radius:4px 14px 14px 14px; font-size:13px; line-height:1.45; color:#D8DBE3;">Здравствуйте! Я ваш ИИ-ассистент. Чем могу помочь?</div>
+            <div style="max-width:84%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.06); padding:10px 13px; border-radius:4px 14px 14px 14px; font-size:13px; line-height:1.45; color:#D8DBE3;" data-i18n="preview_agent_msg">Вітаю! Я ваш ІІ-асистент. Чим можу допомогти?</div>
             <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:14px;" id="brandPreviewChips"></div>
             <div style="display:flex; align-items:center; gap:8px; margin-top:16px;">
-              <span style="flex:1; height:38px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; padding:0 12px; font-size:12.5px; color:#5B6472;">Напишите сообщение…</span>
+              <span style="flex:1; height:38px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; padding:0 12px; font-size:12.5px; color:#5B6472;" data-i18n="preview_input_placeholder">Напишіть повідомлення…</span>
               <span style="width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;" id="brandPreviewSend">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="#fff"/></svg>
               </span>
@@ -212,18 +217,18 @@
 
   <section id="playground" class="section playground-section">
     <div class="section-head center">
-      <div class="eyebrow">Живая песочница</div>
-      <h2>Покрутите виджет прямо здесь</h2>
-      <p>Переключайте форму, положение, тему и акцент — окно браузера обновляется мгновенно, как на реальном сайте.</p>
+      <div class="eyebrow" data-i18n="sb_eyebrow">Жива пісочниця</div>
+      <h2 data-i18n="sb_title">Спробуйте віджет прямо тут</h2>
+      <p data-i18n="sb_desc">Перемикайте форму, положення, тему та акцент — вікно браузера оновлюється миттєво, як на реальному сайті.</p>
     </div>
     <div class="playground">
       <div class="pg-controls">
-        <div class="pg-group"><div class="pg-glabel">Форма</div><div class="pg-list" id="pgForm"></div></div>
-        <div class="pg-group"><div class="pg-glabel">Положение</div><div class="pg-inline-ctl" id="pgPos"></div></div>
-        <div class="pg-group"><div class="pg-glabel">Тема сайта</div><div class="pg-inline-ctl" id="pgTheme"></div></div>
-        <div class="pg-group"><div class="pg-glabel">Акцент</div><div class="pg-accents" id="pgAccent"></div></div>
+        <div class="pg-group"><div class="pg-glabel" data-i18n="sb_form">Форма</div><div class="pg-list" id="pgForm"></div></div>
+        <div class="pg-group"><div class="pg-glabel" data-i18n="sb_pos">Положення</div><div class="pg-inline-ctl" id="pgPos"></div></div>
+        <div class="pg-group"><div class="pg-glabel" data-i18n="sb_theme">Тема сайту</div><div class="pg-inline-ctl" id="pgTheme"></div></div>
+        <div class="pg-group"><div class="pg-glabel" data-i18n="sb_accent">Акцент</div><div class="pg-accents" id="pgAccent"></div></div>
         <div class="pg-switch-row">
-          <span class="pg-switch-label">Виджет открыт</span>
+          <span class="pg-switch-label" data-i18n="sb_widget_open">Віджет відкритий</span>
           <button class="pg-switch" id="pgToggle" type="button"><span class="pg-knob"></span></button>
         </div>
       </div>
@@ -243,9 +248,9 @@
 
   <section id="usecases" class="section usecases-section">
     <div class="section-head center">
-      <div class="eyebrow violet">Сценарии в действии</div>
-      <h2>Не просто чат — он решает задачи</h2>
-      <p>Агент рекомендует товары, отслеживает доставку и квалифицирует лиды прямо в диалоге.</p>
+      <div class="eyebrow violet" data-i18n="uc_eyebrow">Сценарії в дії</div>
+      <h2 data-i18n="uc_title">Не просто чат — він вирішує завдання</h2>
+      <p data-i18n="uc_desc">Агент рекомендує товари, відстежує доставку та кваліфікує ліди прямо в діалозі.</p>
     </div>
     <div class="uc-tabs" id="ucTabs"></div>
     <div class="uc-grid">
@@ -257,9 +262,9 @@
   <section id="code" class="section">
     <div class="integration">
       <div>
-        <div class="eyebrow" style="color:var(--green);">Шаг 3 · Интеграция</div>
-        <h2>Одна строка — и агент на сайте</h2>
-        <p>Вставьте скрипт перед закрывающим тегом body. Виджет подгрузится асинхронно и не замедлит страницу.</p>
+        <div class="eyebrow" style="color:var(--green);" data-i18n="int_eyebrow">Крок 3 · Інтеграція</div>
+        <h2 data-i18n="int_title">Один рядок — і агент на сайті</h2>
+        <p data-i18n="int_desc">Вставте скрипт перед закриваючим тегом body. Віджет завантажиться асинхронно і не сповільнить сторінку.</p>
         <div class="platform-pills">
           <span class="platform-pill">Tilda</span>
           <span class="platform-pill">WordPress</span>
@@ -290,8 +295,8 @@
 
   <section id="how" class="section">
     <div class="section-head center">
-      <div class="eyebrow violet">Как это работает</div>
-      <h2>Три простых шага до запуска</h2>
+      <div class="eyebrow violet" data-i18n="how_eyebrow">Як це працює</div>
+      <h2 data-i18n="how_title">Три прості кроки до запуску</h2>
     </div>
     <div class="how-grid">
       <div class="card how-card">
@@ -299,24 +304,24 @@
         <div class="how-icon" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.35);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H9l-5 4V5z" stroke="#818CF8" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h8M8 12h5" stroke="#818CF8" stroke-width="1.8" stroke-linecap="round"/></svg>
         </div>
-        <div class="htitle">Обучите ИИ</div>
-        <div class="hdesc">Загрузите текст, ссылки или базу знаний — либо просто опишите поведение промптом.</div>
+        <div class="htitle" data-i18n="how_step1_title">Навчіть ІІ</div>
+        <div class="hdesc" data-i18n="how_step1_desc">Завантажте текст, посилання або базу знань — або просто опишіть поведінку промптом.</div>
       </div>
       <div class="card how-card">
         <div class="how-num" style="color:var(--violet);">02</div>
         <div class="how-icon" style="background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.35);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#A78BFA" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="#A78BFA"/></svg>
         </div>
-        <div class="htitle">Настройте дизайн</div>
-        <div class="hdesc">Выберите форму, фирменные цвета, аватар и быстрые ответы в визуальном конструкторе.</div>
+        <div class="htitle" data-i18n="how_step2_title">Налаштуйте дизайн</div>
+        <div class="hdesc" data-i18n="how_step2_desc">Оберіть форму, фірмові кольори, аватар та швидкі відповіді у візуальному конструкторі.</div>
       </div>
       <div class="card how-card">
         <div class="how-num" style="color:var(--green);">03</div>
         <div class="how-icon" style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4" stroke="#34D399" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <div class="htitle">Вставьте код</div>
-        <div class="hdesc">Одна строка на Tilda, WordPress, Shopify или Webflow — и агент уже работает.</div>
+        <div class="htitle" data-i18n="how_step3_title">Вставте код</div>
+        <div class="hdesc" data-i18n="how_step3_desc">Один рядок на Tilda, WordPress, Shopify чи Webflow — і агент уже працює.</div>
       </div>
     </div>
   </section>
@@ -325,9 +330,9 @@
     <div class="cta-box">
       <div class="glow" style="top:-120px; left:50%; transform:translateX(-50%); width:600px; height:400px; background:radial-gradient(closest-side, rgba(99,102,241,0.3), transparent 70%);"></div>
       <div style="position:relative;">
-        <h2>Управляйте своими ИИ-агентами</h2>
-        <p>Войдите в панель по вашему логину и паролю — создавайте, настраивайте и встраивайте агентов на свой сайт.</p>
-        <a class="btn btn-primary" href="/dashboard.html#login">Войти в панель</a>
+        <h2 data-i18n="cta_title">Керуйте своїми ІІ-агентами</h2>
+        <p data-i18n="cta_desc">Увійдіть в панель за вашим логіном та паролем — створюйте, налаштовуйте та вбудовуйте агентів на свій сайт.</p>
+        <a class="btn btn-primary" href="/dashboard.html#login" data-i18n="cta_btn">Увійти в панель</a>
       </div>
     </div>
   </section>
@@ -337,10 +342,10 @@
       <div class="footer-brand">
         <div class="mark"></div>
         <span style="font-weight:700; color:#E5E7EB;">Emble</span>
-        <span class="copy">© 2026 · Все права защищены</span>
+        <span class="copy" data-i18n="footer_copy">© 2026 · Усі права захищені</span>
       </div>
       <div class="footer-links">
-        <a href="#">Контакты</a>
+        <a href="#" data-i18n="footer_contacts">Контакти</a>
       </div>
     </div>
   </footer>

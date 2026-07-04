@@ -1,6 +1,134 @@
 (function () {
   const api = window.EmbleApi;
 
+  let lang = 'uk';
+  try {
+    lang = localStorage.getItem('emble.lang') || 'uk';
+  } catch (e) {}
+
+  const TRANSLATIONS = {
+    'Вход': 'Вхід',
+    'Регистрация': 'Реєстрація',
+    'Войти': 'Увійти',
+    'Создать агента бесплатно': 'Створити агента безкоштовно',
+    'Выйти': 'Вийти',
+    'Пока нет ни одного агента': 'Поки немає жодного агента',
+    'Создайте первого агента, чтобы получить код виджета для сайта.': 'Створіть першого агента, щоб отримати код віджета для сайту.',
+    'Чат-поддержка': 'Чат-підтримка',
+    'Помощник продаж': 'Помічник з продажів',
+    'Генератор лидов': 'Генератор лідів',
+    'Свой агент': 'Власний агент',
+    'Отвечает на вопросы 24/7': 'Відповідає на запитання 24/7',
+    'Ведёт клиента к покупке': 'Веде клієнта до покупки',
+    'Собирает контакты': 'Збирає контакти',
+    'Настройка с нуля': 'Налаштування з нуля',
+    'Черновик': 'Чернетка',
+    'Опубликован': 'Опублікований',
+    'Создать': 'Створити',
+    'Имя агента': 'Ім\'я агента',
+    'Загрузка…': 'Завантаження…',
+    'Все агенты': 'Усі агенти',
+    'Удалить': 'Вилучити',
+    'Снять с публикации': 'Зняти з публікації',
+    'Опубликовать': 'Опублікувати',
+    'Обзор': 'Огляд',
+    'База знаний': 'База знань',
+    'Сценарии': 'Сценарії',
+    'Действия': 'Дії',
+    'Аналитика': 'Аналітика',
+    'Лиды': 'Ліди',
+    'Агент создан': 'Агента створено',
+    'Агент опубликован': 'Агента опубліковано',
+    'Агент снят с публикации': 'Агента знято з публікації',
+    'Агент удалён': 'Агента видалено',
+    'Брендинг виджета': 'Брендинг віджета',
+    'Имя виджета': 'Ім\'я віджета',
+    'Текст статуса': 'Текст статусу',
+    'Онлайн': 'Онлайн',
+    'Фирменный цвет': 'Фірмовий колір',
+    'Приветственное сообщение': 'Привітальне повідомлення',
+    'Оставьте пустым, чтобы убрать приветствие': 'Залиште порожнім, щоб прибрати привітання',
+    'Аватар ассистента': 'Аватар асистента',
+    'Загрузить': 'Завантажити',
+    'Убрать': 'Прибрати',
+    'PNG/JPG, до 256 КБ': 'PNG/JPG, до 256 КБ',
+    'Положение на странице': 'Положення на сторінці',
+    'Слева': 'Ліворуч',
+    'Справа': 'Праворуч',
+    'Стартовое меню': 'Стартове меню',
+    'Домашний экран с кнопками при открытии виджета': 'Домашній екран з кнопками при відкритті віджета',
+    'Сохранить брендинг': 'Зберегти брендинг',
+    'Расширенные настройки': 'Розширені настройки',
+    'Разрешённые домены': 'Дозволені домени',
+    'Пока список пуст — виджет работает с любого домена.': 'Поки список порожній — віджет працює з будь-якого домену.',
+    'Добавить': 'Додати',
+    'Собственный OpenAI API-ключ (BYOK)': 'Власний OpenAI API-ключ (BYOK)',
+    'Если задан — генерация и эмбеддинги идут через ваш ключ и ваш биллинг OpenAI.': 'Якщо вказано — генерація та ембеддінги йдуть через ваш ключ та ваш біллінг OpenAI.',
+    'Сохранить ключ': 'Зберегти ключ',
+    'Живой предпросмотр': 'Живе прев\'ю',
+    'Код для вставки на сайт': 'Код для вставки на сайт',
+    'Опубликуйте агента, чтобы виджет заработал на сайте.': 'Опублікуйте агента, щоб віджет запрацював на сайті.',
+    'Открыть тестовую страницу с виджетом': 'Відкрити тестову сторінку з віджетом',
+    'Ассистент': 'Асистент',
+    'Чат с ассистентом': 'Чат з асистентом',
+    'Часто задаваемые вопросы': 'Часті запитання',
+    'Контакты и график': 'Контакти та графік',
+    'Понедельник': 'Понедiлок',
+    'Вторник': 'Вiвторок',
+    'Среда': 'Середа',
+    'Четверг': 'Четвер',
+    'Пятница': 'П\'ятниця',
+    'Суббота': 'Субота',
+    'Воскресенье': 'Недiля',
+    'Контактная информация не указана': 'Контактна інформація не вказана',
+    'Ключ сохранён': 'Ключ збережено',
+    'Ключ сброшен': 'Ключ скинуто',
+    'Скопировано': 'Скопійовано',
+    'Импортировано товаров: ': 'Імпортовано товарів: ',
+    'Ошибка импорта': 'Помилка імпорту',
+    'Импортировать': 'Імпортувати',
+    'До 10 000 строк за раз': 'До 10 000 рядків за раз',
+    'Импорт каталога': 'Імпорт каталогу',
+    'Обработка: ': 'Обробка: ',
+    ' из ': ' з ',
+    ' товаров': ' товарів',
+    'Выходной': 'Вихідний',
+    'Открыть тестовую страницу': 'Відкрити тестову сторінку',
+    'Удалить агента': 'Видалити агента',
+    'Это действие необратимо.': 'Ця дія незворотна.',
+    'Файл больше 256 КБ — выберите меньше': 'Файл більше 256 КБ — оберіть менший',
+    'Домены не добавлены': 'Домени не додано',
+    'Вход': 'Вхід',
+    'Регистрация': 'Реєстрація',
+    'С возвращением': 'З поверненням',
+    'Войдите, чтобы управлять агентами.': 'Увійдіть, щоб керувати агентами.',
+    'Пароль': 'Пароль',
+    'Демо-доступ:': 'Демо-доступ:',
+    '(после npm run seed)': '(після npm run seed)',
+    'Создать аккаунт': 'Створити акаунт',
+    'Бесплатный тариф навсегда, без карты.': 'Безкоштовний тариф назавжди, без картки.',
+    'Название организации': 'Назва організації',
+    'Минимум 8 символов': 'Мінімум 8 символів',
+    'Создать агента бесплатно': 'Створити агента безкоштовно',
+    'Выйти': 'Вийти',
+    'Мои агенты': 'Мої агенти',
+    'Создайте первого агента, чтобы получить код виджета для сайта.': 'Створіть першого агента, щоб отримати код віджета для сайту.',
+    '+ Создать агента': '+ Створити агента',
+    'Новый агент': 'Новий агент',
+    'Название': 'Назва',
+    'Например, Поддержка сайта': 'Наприклад, Підтримка сайту',
+    'Шаблон поведения': 'Шаблон поведінки',
+    'Отмена': 'Скасувати',
+    'Создать': 'Створити',
+  };
+
+  function t(str) {
+    if (lang === 'uk' && TRANSLATIONS[str]) {
+      return TRANSLATIONS[str];
+    }
+    return str;
+  }
+
   const TEMPLATE_OPTIONS = [
     { id: 'support', name: 'Чат-поддержка', desc: 'Отвечает на вопросы 24/7' },
     { id: 'sales', name: 'Помощник продаж', desc: 'Ведёт клиента к покупке' },
@@ -12,6 +140,7 @@
   };
 
   let currentAgents = [];
+  let currentAgent = null;
   let createTemplate = 'support';
 
   // ---------- helpers ----------
@@ -144,7 +273,7 @@
       grid.innerHTML = '';
       const empty = document.createElement('div');
       empty.className = 'empty-state';
-      empty.innerHTML = `<div class="big">Пока нет ни одного агента</div><p>Создайте первого агента, чтобы получить код виджета для сайта.</p>`;
+      empty.innerHTML = `<div class="big">${t('Пока нет ни одного агента')}</div><p>${t('Создайте первого агента, чтобы получить код виджета для сайта.')}</p>`;
       grid.after(empty);
       return;
     }
@@ -162,7 +291,7 @@
           </div>
           <div style="display:flex; align-items:center; justify-content:space-between;">
             <span class="slug">${a.publicSlug}</span>
-            <span class="status-pill ${a.status === 'published' ? 'published' : 'draft'}">${a.status === 'published' ? 'Опубликован' : 'Черновик'}</span>
+            <span class="status-pill ${a.status === 'published' ? 'published' : 'draft'}">${a.status === 'published' ? t('Опубликован') : t('Черновик')}</span>
           </div>
         </div>
       `;
@@ -173,7 +302,7 @@
   }
 
   function templateName(type) {
-    return (TEMPLATE_OPTIONS.find((t) => t.id === type) || {}).name || type;
+    return t((TEMPLATE_OPTIONS.find((x) => x.id === type) || {}).name || type);
   }
 
   // ---------- create agent modal ----------
@@ -181,10 +310,10 @@
   const templatePick = document.getElementById('templatePick');
 
   function renderTemplatePick() {
-    templatePick.innerHTML = TEMPLATE_OPTIONS.map((t) => `
-      <div class="opt${t.id === createTemplate ? ' active' : ''}" data-id="${t.id}">
-        <span class="n">${t.name}</span>
-        <span class="d">${t.desc}</span>
+    templatePick.innerHTML = TEMPLATE_OPTIONS.map((opt) => `
+      <div class="opt${opt.id === createTemplate ? ' active' : ''}" data-id="${opt.id}">
+        <span class="n">${t(opt.name)}</span>
+        <span class="d">${t(opt.desc)}</span>
       </div>
     `).join('');
     templatePick.querySelectorAll('.opt').forEach((el) => {
@@ -213,13 +342,13 @@
         type: createTemplate,
       });
       createModal.style.display = 'none';
-      toast('Агент создан');
+      toast(t('Агент создан'));
       await loadAgents();
       showAgentDetail(data.agent.id);
     } catch (err) {
       showError('createError', err);
     } finally {
-      setLoading(btn, false, 'Создать');
+      setLoading(btn, false, t('Создать'));
     }
   });
 
@@ -227,41 +356,40 @@
   async function showAgentDetail(agentId) {
     agentsListView.style.display = 'none';
     agentDetailView.style.display = 'block';
-    agentDetailView.innerHTML = '<p style="color:var(--muted);">Загрузка…</p>';
+    agentDetailView.innerHTML = `<p style="color:var(--muted);">${t('Загрузка…')}</p>`;
     try {
       const data = await api.getAgent(agentId);
-      renderAgentDetail(data.agent);
+      currentAgent = data.agent;
+      renderAgentDetail(currentAgent);
     } catch (err) {
       agentDetailView.innerHTML = `<div class="error-banner">${escapeHtml(err.message)}</div>`;
     }
   }
 
-  function renderAgentDetail(agent) {
-    const isPublished = agent.status === 'published';
-
+    currentAgent = agent;
     agentDetailView.innerHTML = `
-      <a href="#" class="detail-back" id="backToList">&larr; Все агенты</a>
+      <a href="#" class="detail-back" id="backToList">&larr; ${t('Все агенты')}</a>
       <div class="detail-head">
         <div class="left">
           <span class="agent-avatar" style="background:${TEMPLATE_ACCENT[agent.type] || '#6366F1'}; width:48px; height:48px; font-size:18px;">${(agent.name || '?').charAt(0).toUpperCase()}</span>
           <div>
             <h1>${escapeHtml(agent.name)}</h1>
-            <span class="status-pill ${isPublished ? 'published' : 'draft'}">${isPublished ? 'Опубликован' : 'Черновик'}</span>
+            <span class="status-pill ${isPublished ? 'published' : 'draft'}">${isPublished ? t('Опубликован') : t('Черновик')}</span>
           </div>
         </div>
         <div class="detail-actions">
-          <button class="btn btn-danger btn-sm" id="deleteAgentBtn">Удалить</button>
-          <button class="btn ${isPublished ? 'btn-outline' : 'btn-primary'}" id="togglePublishBtn">${isPublished ? 'Снять с публикации' : 'Опубликовать'}</button>
+          <button class="btn btn-danger btn-sm" id="deleteAgentBtn">${t('Удалить')}</button>
+          <button class="btn ${isPublished ? 'btn-outline' : 'btn-primary'}" id="togglePublishBtn">${isPublished ? t('Снять с публикации') : t('Опубликовать')}</button>
         </div>
       </div>
 
       <div class="tab-bar" id="detailTabs">
-        <button class="tab-btn active" data-tab="overview">Обзор</button>
-        <button class="tab-btn" data-tab="knowledge">База знаний</button>
-        <button class="tab-btn" data-tab="flows">Сценарии</button>
-        <button class="tab-btn" data-tab="actions">Действия</button>
-        <button class="tab-btn" data-tab="analytics">Аналитика</button>
-        <button class="tab-btn" data-tab="leads">Лиды</button>
+        <button class="tab-btn active" data-tab="overview">${t('Обзор')}</button>
+        <button class="tab-btn" data-tab="knowledge">${t('База знаний')}</button>
+        <button class="tab-btn" data-tab="flows">${t('Сценарии')}</button>
+        <button class="tab-btn" data-tab="actions">${t('Действия')}</button>
+        <button class="tab-btn" data-tab="analytics">${t('Аналитика')}</button>
+        <button class="tab-btn" data-tab="leads">${t('Лиды')}</button>
       </div>
       <div id="tabContent"></div>
     `;
@@ -274,19 +402,19 @@
       try {
         if (isPublished) await api.unpublishAgent(agent.id);
         else await api.publishAgent(agent.id);
-        toast(isPublished ? 'Агент снят с публикации' : 'Агент опубликован');
+        toast(isPublished ? t('Агент снят с публикации') : t('Агент опубликован'));
         showAgentDetail(agent.id);
       } catch (err) {
         toast(err.message);
-        setLoading(btn, false, isPublished ? 'Снять с публикации' : 'Опубликовать');
+        setLoading(btn, false, isPublished ? t('Снять с публикации') : t('Опубликовать'));
       }
     });
 
     document.getElementById('deleteAgentBtn').addEventListener('click', async () => {
-      if (!confirm(`Удалить агента «${agent.name}»? Это действие необратимо.`)) return;
+      if (!confirm(`${t('Удалить агента')} «${agent.name}»? ${t('Это действие необратимо.')}`)) return;
       try {
         await api.deleteAgent(agent.id);
-        toast('Агент удалён');
+        toast(t('Агент удалён'));
         showAgentsList();
       } catch (err) {
         toast(err.message);
@@ -305,7 +433,7 @@
 
   function showTab(tab, agent) {
     const content = document.getElementById('tabContent');
-    content.innerHTML = '<p style="color:var(--muted);">Загрузка…</p>';
+    content.innerHTML = `<p style="color:var(--muted);">${t('Загрузка…')}</p>`;
     if (tab === 'overview') renderOverviewTab(agent, content);
     else if (tab === 'knowledge') renderKnowledgeTab(agent, content);
     else if (tab === 'flows') renderFlowsTab(agent, content);
@@ -363,95 +491,95 @@
       <div class="branding-layout">
         <div class="branding-form">
           <div class="card panel">
-            <h3>Брендинг виджета</h3>
+            <h3>${t('Брендинг виджета')}</h3>
             <div id="brandingError"></div>
-
+ 
             <div class="field">
-              <label>Имя виджета</label>
+              <label>${t('Имя виджета')}</label>
               <input type="text" id="bName" maxlength="120" value="${escapeHtml(state.name)}">
             </div>
-
+ 
             <div class="field">
-              <label>Текст статуса</label>
-              <input type="text" id="bStatusText" maxlength="60" value="${escapeHtml(state.statusText)}" placeholder="Онлайн">
+              <label>${t('Текст статуса')}</label>
+              <input type="text" id="bStatusText" maxlength="60" value="${escapeHtml(state.statusText)}" placeholder="${t('Онлайн')}">
             </div>
-
+ 
             <div class="field">
-              <label>Фирменный цвет</label>
+              <label>${t('Фирменный цвет')}</label>
               <div class="color-picker-row">
                 <input type="color" id="bColor" value="${state.color}">
                 <input type="text" id="bColorHex" value="${state.color}" style="width:110px; font-family:var(--mono);">
               </div>
             </div>
-
+ 
             <div class="field">
-              <label>Приветственное сообщение</label>
-              <textarea id="bGreeting" rows="2" maxlength="500" placeholder="Оставьте пустым, чтобы убрать приветствие">${escapeHtml(state.greeting)}</textarea>
+              <label>${t('Приветственное сообщение')}</label>
+              <textarea id="bGreeting" rows="2" maxlength="500" placeholder="${t('Оставьте пустым, чтобы убрать приветствие')}">${escapeHtml(state.greeting)}</textarea>
             </div>
-
+ 
             <div class="field">
-              <label>Аватар ассистента</label>
+              <label>${t('Аватар ассистента')}</label>
               <div class="avatar-upload-row">
                 <div class="avatar-circle" id="bAvatarCircle">${state.avatar ? `<img src="${escapeHtml(state.avatar)}">` : escapeHtml(state.name.charAt(0).toUpperCase())}</div>
                 <div>
                   <input type="file" id="bAvatarFile" accept="image/*" style="display:none;">
-                  <button type="button" class="btn btn-outline btn-sm" id="bAvatarBtn">Загрузить</button>
+                  <button type="button" class="btn btn-outline btn-sm" id="bAvatarBtn">${t('Загрузить')}</button>
                   ${state.avatar ? '' : ''}
-                  <button type="button" class="btn btn-outline btn-sm" id="bAvatarClear" style="margin-left:6px;">Убрать</button>
-                  <div class="hint">PNG/JPG, до 256 КБ</div>
+                  <button type="button" class="btn btn-outline btn-sm" id="bAvatarClear" style="margin-left:6px;">${t('Убрать')}</button>
+                  <div class="hint">${t('PNG/JPG, до 256 КБ')}</div>
                 </div>
               </div>
             </div>
-
+ 
             <div class="field">
-              <label>Положение на странице</label>
+              <label>${t('Положение на странице')}</label>
               <div class="pos-toggle" id="bPos">
-                <button type="button" data-pos="bottom-left" class="${state.position === 'bottom-left' ? 'active' : ''}">Слева</button>
-                <button type="button" data-pos="bottom-right" class="${state.position === 'bottom-right' ? 'active' : ''}">Справа</button>
+                <button type="button" data-pos="bottom-left" class="${state.position === 'bottom-left' ? 'active' : ''}">${t('Слева')}</button>
+                <button type="button" data-pos="bottom-right" class="${state.position === 'bottom-right' ? 'active' : ''}">${t('Справа')}</button>
               </div>
             </div>
-
+ 
             <div class="field" style="border-top:1px solid var(--border); padding-top:16px;">
               <div class="toggle-row" style="padding-top:0;">
-                <div><div class="label">Стартовое меню</div><div class="desc">Домашний экран с кнопками при открытии виджета</div></div>
+                <div><div class="label">${t('Стартовое меню')}</div><div class="desc">${t('Домашний экран с кнопками при открытии виджета')}</div></div>
                 <label class="switch"><input type="checkbox" id="smEnabled" ${state.startMenu.enabled ? 'checked' : ''}><span class="track"></span></label>
               </div>
               <div id="smItems" style="margin-top:10px;"></div>
               <div class="subform-tabs" style="margin-top:8px;">
-                <button type="button" class="sm-add" data-type="chat">+ Чат</button>
+                <button type="button" class="sm-add" data-type="chat">+ ${t('Чат')}</button>
                 <button type="button" class="sm-add" data-type="faq">+ FAQ</button>
-                <button type="button" class="sm-add" data-type="contacts">+ Контакты</button>
+                <button type="button" class="sm-add" data-type="contacts">+ ${t('Контакты')}</button>
               </div>
             </div>
-
-            <button class="btn btn-primary btn-sm" id="saveBrandingBtn" style="margin-top:6px;">Сохранить брендинг</button>
-
+ 
+            <button class="btn btn-primary btn-sm" id="saveBrandingBtn" style="margin-top:6px;">${t('Сохранить брендинг')}</button>
+ 
             <div class="accordion" id="advAccordion">
               <div class="accordion-head" id="advHead">
-                <span class="t">Расширенные настройки</span>
+                <span class="t">${t('Расширенные настройки')}</span>
                 <span class="chev">▾</span>
               </div>
               <div class="accordion-body">
                 <div style="margin-bottom:18px;">
-                  <label style="display:block; font-size:13px; font-weight:600; color:#C7CBD6; margin-bottom:8px;">Разрешённые домены</label>
-                  <p style="font-size:12px; color:var(--dim); margin:0 0 10px;">Пока список пуст — виджет работает с любого домена.</p>
+                  <label style="display:block; font-size:13px; font-weight:600; color:#C7CBD6; margin-bottom:8px;">${t('Разрешённые домены')}</label>
+                  <p style="font-size:12px; color:var(--dim); margin:0 0 10px;">${t('Пока список пуст — виджет работает с любого домена.')}</p>
                   <div id="domainsError"></div>
                   <div class="domains-list" id="domainsList"></div>
                   <div class="add-domain-row">
                     <input type="text" id="newDomainInput" placeholder="example.com">
-                    <button type="button" class="btn btn-outline btn-sm" id="addDomainBtn">Добавить</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="addDomainBtn">${t('Добавить')}</button>
                   </div>
                 </div>
 
                 <div>
-                  <label style="display:block; font-size:13px; font-weight:600; color:#C7CBD6; margin-bottom:8px;">Собственный OpenAI API-ключ (BYOK)</label>
-                  <p style="font-size:12px; color:var(--dim); margin:0 0 10px;">Если задан — генерация и эмбеддинги идут через ваш ключ и ваш биллинг OpenAI.</p>
+                  <label style="display:block; font-size:13px; font-weight:600; color:#C7CBD6; margin-bottom:8px;">${t('Собственный OpenAI API-ключ (BYOK)')}</label>
+                  <p style="font-size:12px; color:var(--dim); margin:0 0 10px;">${t('Если задан — генерация и эмбеддинги идут через ваш ключ и ваш биллинг OpenAI.')}</p>
                   <div id="byokError"></div>
                   <div class="pw-wrap">
                     <input type="password" id="byokKey" placeholder="sk-..." autocomplete="off">
                     <button type="button" class="pw-toggle" id="byokToggle" title="Показать/скрыть">${EYE_SVG}</button>
                   </div>
-                  <button type="button" class="btn btn-outline btn-sm" id="byokSaveBtn" style="margin-top:10px;">Сохранить ключ</button>
+                  <button type="button" class="btn btn-outline btn-sm" id="byokSaveBtn" style="margin-top:10px;">${t('Сохранить ключ')}</button>
                 </div>
               </div>
             </div>
@@ -460,7 +588,7 @@
 
         <div class="branding-preview-col">
           <div class="card panel" style="padding:16px;">
-            <h3 style="margin-bottom:14px;">Живой предпросмотр</h3>
+            <h3 style="margin-bottom:14px;">${t('Живой предпросмотр')}</h3>
             <div class="mock-browser">
               <div class="mock-chrome">
                 <span class="dot" style="background:#FF5F57;"></span><span class="dot" style="background:#FEBC2E;"></span><span class="dot" style="background:#28C840;"></span>
@@ -493,8 +621,8 @@
           </div>
 
           <div class="card panel" style="margin-top:18px;">
-            <h3>Код для вставки на сайт</h3>
-            ${!isPublished ? '<div class="error-banner">Опубликуйте агента, чтобы виджет заработал на сайте.</div>' : ''}
+            <h3>${t('Код для вставки на сайт')}</h3>
+            ${!isPublished ? `<div class="error-banner">${t('Опубликуйте агента, чтобы виджет заработал на сайте.')}</div>` : ''}
             <div class="snippet-box">
               <div class="snippet-titlebar">
                 <span style="font-family:var(--mono); font-size:12px; color:var(--dim);">index.html</span>
@@ -502,7 +630,7 @@
               </div>
               <div class="snippet-body">${escapeHtml(buildSnippet(agent))}</div>
             </div>
-            <a href="/widget-demo.html?agent=${agent.publicSlug}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:14px; width:100%;">Открыть тестовую страницу с виджетом</a>
+            <a href="/widget-demo.html?agent=${agent.publicSlug}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:14px; width:100%;">${t('Открыть тестовую страницу с виджетом')}</a>
           </div>
         </div>
       </div>
@@ -556,7 +684,7 @@
     }
 
     // ---- Редактор стартового меню ----
-    function defaultMenuTitle(type) { return MENU_TYPE_LABEL[type] || 'Пункт меню'; }
+    function defaultMenuTitle(type) { return t(MENU_TYPE_LABEL[type]) || t('Пункт меню'); }
     function renderMenuItems() {
       const box = document.getElementById('smItems');
       const disabled = !state.startMenu.enabled;
@@ -565,13 +693,13 @@
       box.innerHTML = state.startMenu.items.map((it, i) => `
         <div class="list-row" style="flex-direction:column; align-items:stretch; gap:8px;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span class="tag-pill">${escapeHtml(MENU_TYPE_LABEL[it.type] || it.type)}</span>
+            <span class="tag-pill">${escapeHtml(t(MENU_TYPE_LABEL[it.type]) || it.type)}</span>
             <input type="text" class="sm-title" data-i="${i}" value="${escapeHtml(it.title || '')}" placeholder="${escapeHtml(defaultMenuTitle(it.type))}" style="flex:1;">
             <button type="button" class="sm-del" data-i="${i}" style="background:none; border:none; color:var(--dim); cursor:pointer;">✕</button>
           </div>
           ${it.type === 'contacts' ? contactsEditorHtml(it, i) : ''}
         </div>
-      `).join('') || '<p style="font-size:12px; color:var(--dim);">Добавьте пункты меню кнопками ниже.</p>';
+      `).join('') || `<p style="font-size:12px; color:var(--dim);">${t('Добавьте пункты меню кнопками ниже.')}</p>`;
 
       box.querySelectorAll('.sm-title').forEach((inp) => {
         inp.addEventListener('input', () => { state.startMenu.items[Number(inp.dataset.i)].title = inp.value; updatePreview(); });
@@ -589,15 +717,15 @@
       const socials = c.socials || {};
       return `
         <div style="border-top:1px dashed var(--border); padding-top:10px; display:flex; flex-direction:column; gap:8px;">
-          <input type="text" class="cc-field" data-i="${i}" data-k="phone" value="${escapeHtml(c.phone || '')}" placeholder="Телефон, напр. +7 999 000-00-00">
-          <input type="text" class="cc-field" data-i="${i}" data-k="email" value="${escapeHtml(c.email || '')}" placeholder="Email, напр. hello@company.ru">
-          <input type="text" class="cc-field" data-i="${i}" data-k="address" value="${escapeHtml(c.address || '')}" placeholder="Адрес, напр. Москва, ул. Примерная, 1">
+          <input type="text" class="cc-field" data-i="${i}" data-k="phone" value="${escapeHtml(c.phone || '')}" placeholder="${t('Телефон, напр. +7 999 000-00-00')}">
+          <input type="text" class="cc-field" data-i="${i}" data-k="email" value="${escapeHtml(c.email || '')}" placeholder="${t('Email, напр. hello@company.ru')}">
+          <input type="text" class="cc-field" data-i="${i}" data-k="address" value="${escapeHtml(c.address || '')}" placeholder="${t('Адрес, напр. Москва, ул. Примерная, 1')}">
 
-          <div style="font-size:12px; font-weight:600; color:#C7CBD6; margin-top:4px;">График работы</div>
+          <div style="font-size:12px; font-weight:600; color:#C7CBD6; margin-top:4px;">${t('График работы')}</div>
           <div class="cc-sched">
             ${sched.map((d, di) => `
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                <span style="flex:1; font-size:12.5px; color:var(--text);">${escapeHtml(d.label)}</span>
+                <span style="flex:1; font-size:12.5px; color:var(--text);">${escapeHtml(t(d.label))}</span>
                 <label class="switch"><input type="checkbox" class="cc-dayon" data-i="${i}" data-d="${di}" ${d.enabled !== false ? 'checked' : ''}><span class="track"></span></label>
                 <input type="time" class="cc-time" data-i="${i}" data-d="${di}" data-t="from" value="${escapeHtml(d.from || '09:00')}" ${d.enabled === false ? 'disabled' : ''} style="width:96px;">
                 <input type="time" class="cc-time" data-i="${i}" data-d="${di}" data-t="to" value="${escapeHtml(d.to || '18:00')}" ${d.enabled === false ? 'disabled' : ''} style="width:96px;">
@@ -605,8 +733,8 @@
             `).join('')}
           </div>
 
-          <div style="font-size:12px; font-weight:600; color:#C7CBD6; margin-top:4px;">Соцсети <span style="color:var(--dim); font-weight:400;">(необязательно)</span></div>
-          ${SOCIAL_FIELDS.map((s) => `<input type="text" class="cc-social" data-i="${i}" data-s="${s.key}" value="${escapeHtml(socials[s.key] || '')}" placeholder="${escapeHtml(s.label)}">`).join('')}
+          <div style="font-size:12px; font-weight:600; color:#C7CBD6; margin-top:4px;">${t('Соцсети')} <span style="color:var(--dim); font-weight:400;">(${t('необязательно')})</span></div>
+          ${SOCIAL_FIELDS.map((s) => `<input type="text" class="cc-social" data-i="${i}" data-s="${s.key}" value="${escapeHtml(socials[s.key] || '')}" placeholder="${escapeHtml(t(s.label))}">`).join('')}
         </div>
       `;
     }
@@ -2032,6 +2160,102 @@
   }
 
   // ---------- boot ----------
+  // ---------- boot ----------
+  function initLangSwitcher() {
+    const bindBtns = () => {
+      document.querySelectorAll('.lang-btn-ua').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          applyLanguage('uk');
+        });
+      });
+      document.querySelectorAll('.lang-btn-ru').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          applyLanguage('ru');
+        });
+      });
+    };
+    bindBtns();
+  }
+
+  function applyLanguage(selectedLang) {
+    lang = selectedLang;
+    try {
+      localStorage.setItem('emble.lang', lang);
+    } catch (e) {}
+    
+    // Update active switcher buttons style
+    document.querySelectorAll('.lang-btn-ua').forEach((btn) => {
+      btn.style.color = lang === 'uk' ? '#818CF8' : '#6B7280';
+    });
+    document.querySelectorAll('.lang-btn-ru').forEach((btn) => {
+      btn.style.color = lang === 'ru' ? '#818CF8' : '#6B7280';
+    });
+
+    document.documentElement.lang = lang;
+
+    // Translate any static elements in dashboard.html that have data-i18n
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const key = el.dataset.i18n;
+      const authMap = {
+        auth_login_tab: t('Вход'),
+        auth_register_tab: t('Регистрация'),
+        auth_login_title: t('С возвращением'),
+        auth_login_sub: t('Войдите, чтобы управлять агентами.'),
+        auth_email: 'Email',
+        auth_password: t('Пароль'),
+        auth_login_btn: t('Войти'),
+        auth_demo: t('Демо-доступ:'),
+        auth_seed: t('(после npm run seed)'),
+        auth_reg_title: t('Создать аккаунт'),
+        auth_reg_sub: t('Бесплатный тариф навсегда, без карты.'),
+        auth_reg_org: t('Название организации'),
+        auth_reg_pass_hint: t('Минимум 8 символов'),
+        auth_reg_btn: t('Создать агента бесплатно'),
+        auth_logout: t('Выйти'),
+        dash_my_agents: t('Мои агенты'),
+        dash_agents_desc: t('Створіть ІІ-агента та отримайте код для вставки на сайт.'),
+        dash_create_agent: t('+ Создать агента'),
+        modal_new_agent: t('Новый агент'),
+        modal_name: t('Название'),
+        modal_template: t('Шаблон поведения'),
+        modal_cancel: t('Отмена'),
+        modal_create: t('Создать'),
+      };
+      if (authMap[key]) {
+        el.textContent = authMap[key];
+      }
+    });
+
+    // Translate placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+      const key = el.dataset.i18nPlaceholder;
+      const placeholderMap = {
+        modal_name_placeholder: t('Например, Поддержка сайта'),
+      };
+      if (placeholderMap[key]) {
+        el.placeholder = placeholderMap[key];
+      }
+    });
+
+    // Re-render active view to apply translation dynamically
+    if (appView.style.display === 'block') {
+      if (agentsListView.style.display === 'block') {
+        loadAgents();
+      } else if (currentAgent) {
+        const activeTabBtn = document.querySelector('#detailTabs .tab-btn.active');
+        const currentTab = activeTabBtn ? activeTabBtn.dataset.tab : 'overview';
+        renderAgentDetail(currentAgent);
+        const tabBtn = document.querySelector(`#detailTabs .tab-btn[data-tab="${currentTab}"]`);
+        if (tabBtn) {
+          tabBtn.click();
+        }
+      }
+    }
+  }
+
+  initLangSwitcher();
+  applyLanguage(lang);
+
   if (api.isAuthed()) {
     enterApp();
   } else {

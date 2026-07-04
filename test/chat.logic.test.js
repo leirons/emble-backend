@@ -103,21 +103,21 @@ const EMPTY_CTX = { contextChunks: [], qaMatches: [], productMatches: [] };
 
 test('buildSystemPrompt always includes the strict "do not invent" rules', () => {
   const p = buildSystemPrompt(AGENT, { ...EMPTY_CTX, settings: {}, userText: 'вопрос' });
-  assert.ok(p.includes('НЕ ВЫДУМЫВАЙ'));
-  assert.ok(p.includes('ОПИРАЯСЬ ТОЛЬКО'));
+  assert.ok(p.includes('НЕ ВИГАДУЙ'));
+  assert.ok(p.includes('СПИРАЮЧИСЬ ТІЛЬКИ'));
 });
 
 test('buildSystemPrompt offers contact capture only when emailFallbackEnabled', () => {
   const withFallback = buildSystemPrompt(AGENT, { ...EMPTY_CTX, settings: { emailFallbackEnabled: true }, userText: 'q' });
-  assert.ok(withFallback.includes('оставить контакт'));
+  assert.ok(withFallback.includes('залишити'));
   const without = buildSystemPrompt(AGENT, { ...EMPTY_CTX, settings: { emailFallbackEnabled: false }, userText: 'q' });
-  assert.ok(without.includes('переформулировать вопрос'));
-  assert.ok(!without.includes('оставить контакт'));
+  assert.ok(without.includes('переформулювати запитання'));
+  assert.ok(!without.includes('залишити'));
 });
 
 test('buildSystemPrompt pins the answer language when autoLanguage is on', () => {
   const uk = buildSystemPrompt(AGENT, { ...EMPTY_CTX, settings: { autoLanguage: true }, userText: 'Скільки коштує?' });
-  assert.ok(uk.includes('украинском'));
+  assert.ok(uk.includes('українською'));
 });
 
 test('buildSystemPrompt embeds retrieved knowledge, Q&A and catalog blocks', () => {

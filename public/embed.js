@@ -311,7 +311,7 @@
   // Ручной ввод email посетителем → source='manual' (отличается от авто-фолбэка бота 'email_fallback').
   var emailLinkBtn = el('button', { class: 'emble-email-link', title: 'Оставить email', onClick: function () { showEmailForm({ source: 'manual' }); } }, ['✉']);
 
-  var nameEl = el('span', { class: 'name' }, ['Ассистент']);
+  var nameEl = el('span', { class: 'name' }, ['Асистент']);
   var statusDot = el('span', { class: 'emble-status-dot' });
   var statusEl = el('span', { class: 'status' }, [statusDot, 'онлайн']);
   var headerText = el('span', { style: 'flex:1;' }, [nameEl, document.createElement('br'), statusEl]);
@@ -330,7 +330,7 @@
     infoEl,
     quickEl,
     footerEl,
-    el('div', { class: 'emble-powered' }, ['Работает на Emble']),
+    el('div', { class: 'emble-powered' }, ['Працює на Emble']),
   ]);
 
   var MENU_ICONS = {
@@ -398,7 +398,7 @@
     infoEl.innerHTML = '';
     var faq = STATE.faq || [];
     if (faq.length === 0) {
-      infoEl.appendChild(el('div', { class: 'emble-contacts' }, ['Пока нет частых вопросов.']));
+      infoEl.appendChild(el('div', { class: 'emble-contacts' }, ['Поки немає частих запитань.']));
       return;
     }
     faq.forEach(function (qa) {
@@ -479,19 +479,19 @@
 
     // --- Контактные карточки ---
     if (c.phone) wrap.appendChild(contactCard(brand, 'phone', 'Телефон', c.phone, 'tel:' + c.phone.replace(/[^\d+]/g, '')));
-    if (c.email) wrap.appendChild(contactCard(brand, 'email', 'Почта', c.email, 'mailto:' + c.email));
-    if (c.address) wrap.appendChild(contactCard(brand, 'address', 'Адрес', c.address, 'https://maps.google.com/?q=' + encodeURIComponent(c.address)));
+    if (c.email) wrap.appendChild(contactCard(brand, 'email', 'Пошта', c.email, 'mailto:' + c.email));
+    if (c.address) wrap.appendChild(contactCard(brand, 'address', 'Адреса', c.address, 'https://maps.google.com/?q=' + encodeURIComponent(c.address)));
 
     // --- График работы ---
     if (c.schedule && c.schedule.length) {
       var open = isOpenNow(c.schedule);
       var todayIdx = (new Date().getDay() + 6) % 7;
       var head = el('div', { class: 'emble-sec-head' }, []);
-      head.appendChild(el('span', { class: 'emble-sec-title' }, ['График работы']));
+      head.appendChild(el('span', { class: 'emble-sec-title' }, ['Графік роботи']));
       if (open !== null) {
         var badge = el('span', { class: 'emble-badge ' + (open ? 'open' : 'closed') }, []);
         badge.appendChild(el('span', { class: 'emble-badge-dot' }));
-        badge.appendChild(document.createTextNode(open ? 'Открыто' : 'Закрыто'));
+        badge.appendChild(document.createTextNode(open ? 'Відчинено' : 'Зачинено'));
         head.appendChild(badge);
       }
       wrap.appendChild(head);
@@ -500,7 +500,7 @@
       c.schedule.forEach(function (d, i) {
         var active = i === todayIdx;
         var off = d.enabled === false;
-        var hours = off ? 'Выходной' : ((d.from || '') + (d.from && d.to ? '–' : '') + (d.to || ''));
+        var hours = off ? 'Вихідний' : ((d.from || '') + (d.from && d.to ? '–' : '') + (d.to || ''));
         var row = el('div', { class: 'emble-sched-row' + (i === c.schedule.length - 1 ? ' last' : '') }, []);
         var name = el('span', { class: 'emble-sched-day' }, [d.label || '']);
         var val = el('span', { class: 'emble-sched-hours' }, [hours || '—']);
@@ -518,7 +518,7 @@
     var socials = c.socials || {};
     var filled = SOCIAL_ORDER.filter(function (k) { return socials[k]; });
     if (filled.length) {
-      wrap.appendChild(el('div', { class: 'emble-sec-title', style: 'margin:18px 0 10px;' }, ['Мы в соцсетях']));
+      wrap.appendChild(el('div', { class: 'emble-sec-title', style: 'margin:18px 0 10px;' }, ['Ми в соцмережах']));
       var grid = el('div', { class: 'emble-social-grid' });
       filled.forEach(function (k) {
         var meta = SOCIAL_META[k];
@@ -531,7 +531,7 @@
     }
 
     if (!wrap.children.length) {
-      wrap.appendChild(el('div', { class: 'emble-contacts' }, ['Контактная информация не указана.']));
+      wrap.appendChild(el('div', { class: 'emble-contacts' }, ['Контактна інформація не вказана.']));
     }
     infoEl.appendChild(wrap);
   }
@@ -635,10 +635,10 @@
     // Что собираем — email или телефон — задаёт владелец в настройках агента (leadContactType).
     var isPhone = ((STATE.settings && STATE.settings.leadContactType) || 'email') === 'phone';
     var source = opts.source || 'email_fallback';
-    var successText = opts.success || (isPhone ? 'Спасибо! Мы свяжемся с вами по телефону.' : 'Спасибо! Мы свяжемся с вами по email.');
+    var successText = opts.success || (isPhone ? 'Дякуємо! Ми зв\'яжемося з вами по телефону.' : 'Дякуємо! Ми зв\'яжемося з вами по email.');
     var promptText = opts.prompt != null ? opts.prompt : (isPhone
-      ? 'Оставьте телефон — мы свяжемся с вами, если бот не сможет помочь.'
-      : 'Оставьте email — мы напишем вам, если бот не сможет помочь.');
+      ? 'Залиште телефон — ми зв\'яжемося з вами, якщо бот не зможе допомогти.'
+      : 'Залиште email — ми напишемо вам, якщо бот не зможе допомогти.');
 
     var contactInput = el('input', { class: 'emble-input', type: isPhone ? 'tel' : 'email', placeholder: isPhone ? 'Ваш телефон' : 'Ваш email' });
     var submit = function () { submitLeadContact(contactInput.value, formEl, source, successText, isPhone); };
@@ -665,7 +665,7 @@
     try {
       await api('/leads', { method: 'POST', body: JSON.stringify(payload) });
       formEl.remove();
-      appendMessage('assistant', successText || 'Спасибо! Мы свяжемся с вами.');
+      appendMessage('assistant', successText || 'Дякуємо! Ми зв\'яжемося з вами.');
     } catch (e) {
       /* оставляем форму — пользователь может попробовать снова */
     }
@@ -677,9 +677,9 @@
     var s = STATE.settings || {};
     if (!s.enableEmailOnEscalation) return;
     var msg = s.escalationEmailMessage ||
-      'Менеджер ответит вам в ближайшее время. Пожалуйста, оставьте свой email, чтобы мы прислали ответ, если вы закроете сайт.';
+      'Менеджер відповість вам найближчим часом. Будь ласка, залиште свій email, щоб ми надіслали відповідь, якщо ви закриєте сайт.';
     appendMessage('assistant', msg);
-    showEmailForm({ source: 'escalation', prompt: '', success: 'Спасибо, контакт сохранён!' });
+    showEmailForm({ source: 'escalation', prompt: '', success: 'Дякуємо, контакт збережено!' });
   }
 
   var proactiveEl = null;
@@ -708,8 +708,8 @@
     if (s.emailFallbackEnabled) {
       showEmailForm({
         source: 'auto',
-        prompt: 'Оставьте email — мы напишем вам с ответом или спецпредложением.',
-        success: 'Спасибо! Мы свяжемся с вами по email.',
+        prompt: 'Залиште email — ми напишемо вам із відповіддю або спецпропозицією.',
+        success: 'Дякуємо! Ми зв\'яжемося з вами по email.',
       });
     }
   }
@@ -788,7 +788,7 @@
           if (data && typeof data.text === 'string') assistantEl.textContent += data.text;
           messagesEl.scrollTop = messagesEl.scrollHeight;
         } else if (event === 'error') {
-          assistantEl.textContent = data.message || 'Произошла ошибка.';
+          assistantEl.textContent = data.message || 'Сталася помилка.';
         } else if (event === 'escalated') {
           handleEscalation();
         } else if (event === 'done') {
@@ -796,7 +796,7 @@
         }
       });
     } catch (e) {
-      assistantEl.textContent = 'Не удалось получить ответ. Проверьте соединение.';
+      assistantEl.textContent = 'Не вдалося отримати відповідь. Перевірте з\'єднання.';
     } finally {
       if (typingEl) { typingEl.remove(); typingEl = null; }
       // Показываем пузырёк, если в нём есть текст (ответ ИЛИ сообщение об ошибке);
@@ -840,14 +840,14 @@
 
     var brand = (STATE.branding && STATE.branding.brandColor) || '#6366F1';
     styleEl.textContent = css(brand);
-    nameEl.textContent = (STATE.agent && STATE.agent.name) || 'Ассистент';
+    nameEl.textContent = (STATE.agent && STATE.agent.name) || 'Асистент';
 
     // Приветствие выбираем один раз при загрузке (и здесь же помечаем визит в localStorage).
     STATE.greeting = computeGreeting();
 
     if (!STATE.settings.emailFallbackEnabled) emailLinkBtn.style.display = 'none';
     // Подсказка кнопки ручного ввода контакта — под выбранный тип (email/телефон).
-    emailLinkBtn.title = STATE.settings.leadContactType === 'phone' ? 'Оставить телефон' : 'Оставить email';
+    emailLinkBtn.title = STATE.settings.leadContactType === 'phone' ? 'Залишити телефон' : 'Залишити email';
 
     // Приветствие и быстрые ответы показываются при входе в чат (showChatView) —
     // чтобы не мелькать под домашним экраном стартового меню.
