@@ -19,3 +19,10 @@ poker-trainer/
 # Python caches (from stray files)
 __pycache__/
 *.pyc
+
+# Browser profiles created by verification harnesses (large, local-only)
+.chrome-profile-*/
+**/.chrome-profile-*/
+
+# Paperclip agent scratch write-ups (issue comments, not repo code)
+.acm*-comment.*

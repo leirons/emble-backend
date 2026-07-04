@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ACM-35 contrast verification harness</title>
+  <!--
+    Browser harness for ACM-35 (QA of the ACM-34 widget text-contrast fix).
+    Loads the REAL public/embed.js and mocks the widget API in-page (no backend needed).
+
+    Query params:
+      brand=<hex>   brand color injected into branding.brandColor (default #6366F1)
+      pos=left|right
+  -->
+  <style>
+    body { margin: 0; padding: 24px; background: #eef1f5; font-family: system-ui, sans-serif; }
+    .note { max-width: 620px; color: #333; }
+  </style>
+</head>
+<body>
+  <div class="note">
+    <h1>ACM-35 harness</h1>
+    <p>Widget mounts bottom corner. Brand color driven by <code>?brand=</code>.</p>
+  </div>
+
+  <script>
+    var q = new URLSearchParams(location.search);
+    var BRAND = q.get('brand') || '#6366F1';
+    var POS = q.get('pos') === 'left' ? 'bottom-left' : 'bottom-right';
+
+    var MOCK_CONFIG = {
+      agent: { name: 'Acme Support' },
+      branding: {
+        brandColor: BRAND,
+        position: POS,
+        greeting: 'Hi! 👋 How can we help you today?',
+        quickReplies: ['Track my order', 'Return policy', 'Talk to a human']
+      },
+      settings: { emailFallbackEnabled: true, proactiveEnabled: false },
+      hasStartFlow: false,
+      startMenu: { enabled: false, items: [] },
+      faq: [{ question: 'Do you ship internationally?', answer: 'Yes, worldwide.' }]
+    };
+
+    function jsonResponse(obj) {
+      return new Response(JSON.stringify(obj), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    function sseResponse(text, messageId) {
+      var frames = [];
+      text.split(' ').forEach(function (w, i) {
+        frames.push('event: delta\ndata: ' + JSON.stringify({ text: (i ? ' ' : '') + w }) + '\n\n');
+      });
+      frames.push('event: done\ndata: ' + JSON.stringify({ messageId: messageId || 'm1' }) + '\n\n');
+      var enc = new TextEncoder(), i = 0;
+      var stream = new ReadableStream({
+        pull: function (c) { if (i < frames.length) { c.enqueue(enc.encode(frames[i++])); } else { c.close(); } }
+      });
+      return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+    }
+
+    window.fetch = function (url) {
+      url = String(url);
+      if (/\/config(\?|$)/.test(url)) return Promise.resolve(jsonResponse(MOCK_CONFIG));
+      if (/\/conversations$/.test(url)) return Promise.resolve(jsonResponse({ conversationId: 'c_demo' }));
+      if (/\/messages$/.test(url)) return Promise.resolve(sseResponse('Sure! Your order #1042 is out for delivery today.'));
+      return Promise.resolve(jsonResponse({ ok: true }));
+    };
+    try { navigator.sendBeacon = function () { return true; }; } catch (e) {}
+  </script>
+
+  <script src="../../public/embed.js" data-agent="agent-demo" async></script>
+</body>
+</html>

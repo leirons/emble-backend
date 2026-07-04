@@ -46,6 +46,9 @@
       proactiveMessage: 'Нужна помощь с выбором? Спросите меня 🙂',
       proactiveDelaySeconds: 1,
       enableReturningGreeting: false,
+      // ACM-29: when escalate=1, the SSE stream ends with an `escalated` frame and the
+      // widget shows the escalation email form (source='escalation').
+      enableEmailOnEscalation: q.get('escalate') === '1',
     },
     hasStartFlow: false,
     startMenu: {
@@ -120,6 +123,9 @@
             i++;
             setTimeout(push, 40);
           } else {
+            if (q.get('escalate') === '1') {
+              controller.enqueue(enc.encode('event: escalated\ndata: {}\n\n'));
+            }
             var doneFrame = robust
               ? 'event: done\r\ndata: ' + JSON.stringify({ messageId: 'm_demo_1' }) + '\r\n\r\n'
               : 'event: done\ndata: ' + JSON.stringify({ messageId: 'm_demo_1' }) + '\n\n';
@@ -135,13 +141,22 @@
     }));
   }
 
-  window.fetch = function (url) {
+  // ACM-29: record the source label of every /leads POST so the assertion driver
+  // can verify manual/auto/escalation are sent distinctly.
+  window.__leads = [];
+  window.fetch = function (url, opts) {
     var u = String(url);
     if (u.indexOf('/config') !== -1) return json(CONFIG);
     if (/\/conversations$/.test(u)) return json({ conversationId: 'c_demo_1' });
     if (/\/messages$/.test(u)) return sseStream();
     if (u.indexOf('/feedback') !== -1) return json({ ok: true });
-    if (u.indexOf('/leads') !== -1) return json({ ok: true, id: 'lead_1' });
+    if (u.indexOf('/leads') !== -1) {
+      try {
+        var body = JSON.parse((opts && opts.body) || '{}');
+        window.__leads.push((body.capturedFields && body.capturedFields.source) || null);
+      } catch (e) { window.__leads.push('PARSE_ERROR'); }
+      return json({ ok: true, id: 'lead_1' });
+    }
     if (u.indexOf('/events') !== -1) return json({ ok: true });
     return json({ ok: true });
   };

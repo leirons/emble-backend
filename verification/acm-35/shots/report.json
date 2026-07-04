@@ -1,0 +1,387 @@
+[
+  {
+    "name": "01-yellow-FFEB3B",
+    "brand": "#FFEB3B",
+    "expect": "dark",
+    "kind": "light",
+    "ok": true,
+    "surfaces": [
+      {
+        "key": "launcher",
+        "present": true,
+        "fg": [
+          26,
+          26,
+          26
+        ],
+        "bg": [
+          255,
+          235,
+          59
+        ],
+        "fgCss": "rgb(26, 26, 26)",
+        "contrast": 14.25,
+        "same": false
+      },
+      {
+        "key": "header-name",
+        "present": true,
+        "fg": [
+          26,
+          26,
+          26
+        ],
+        "bg": [
+          255,
+          235,
+          59
+        ],
+        "fgCss": "rgb(26, 26, 26)",
+        "contrast": 14.25,
+        "same": false
+      },
+      {
+        "key": "user-bubble",
+        "present": true,
+        "fg": [
+          26,
+          26,
+          26
+        ],
+        "bg": [
+          255,
+          235,
+          59
+        ],
+        "fgCss": "rgb(26, 26, 26)",
+        "contrast": 14.25,
+        "same": false
+      },
+      {
+        "key": "send-icon",
+        "present": true,
+        "fg": [
+          26,
+          26,
+          26
+        ],
+        "bg": [
+          255,
+          235,
+          59
+        ],
+        "fgCss": "rgb(26, 26, 26)",
+        "contrast": 14.25,
+        "same": false
+      }
+    ]
+  },
+  {
+    "name": "02-white-FFFFFF",
+    "brand": "#FFFFFF",
+    "expect": "dark",
+    "kind": "light",
+    "ok": true,
+    "surfaces": [
+      {
+        "key": "launcher",
+        "present": true,
+        "fg": [
+          26,
+          26,
+          26
+        ],
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "fgCss": "rgb(26, 26, 26)",
+        "contrast": 17.4,
+        "same": false
+      },
+      {
+        "key": "header-name",
+        "present": true,
+        "fg": [
+          26,
+          26,
+          26
+        ],
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "fgCss": "rgb(26, 26, 26)",
+        "contrast": 17.4,
+        "same": false
+      },
+      {
+        "key": "user-bubble",
+        "present": true,
+        "fg": [
+          26,
+          26,
+          26
+        ],
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "fgCss": "rgb(26, 26, 26)",
+        "contrast": 17.4,
+        "same": false
+      },
+      {
+        "key": "send-icon",
+        "present": true,
+        "fg": [
+          26,
+          26,
+          26
+        ],
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "fgCss": "rgb(26, 26, 26)",
+        "contrast": 17.4,
+        "same": false
+      }
+    ]
+  },
+  {
+    "name": "03-navy-11151F",
+    "brand": "#11151F",
+    "expect": "light",
+    "kind": "dark",
+    "ok": true,
+    "surfaces": [
+      {
+        "key": "launcher",
+        "present": true,
+        "fg": [
+          255,
+          255,
+          255
+        ],
+        "bg": [
+          17,
+          21,
+          31
+        ],
+        "fgCss": "rgb(255, 255, 255)",
+        "contrast": 18.25,
+        "same": false
+      },
+      {
+        "key": "header-name",
+        "present": true,
+        "fg": [
+          255,
+          255,
+          255
+        ],
+        "bg": [
+          17,
+          21,
+          31
+        ],
+        "fgCss": "rgb(255, 255, 255)",
+        "contrast": 18.25,
+        "same": false
+      },
+      {
+        "key": "user-bubble",
+        "present": true,
+        "fg": [
+          255,
+          255,
+          255
+        ],
+        "bg": [
+          17,
+          21,
+          31
+        ],
+        "fgCss": "rgb(255, 255, 255)",
+        "contrast": 18.25,
+        "same": false
+      },
+      {
+        "key": "send-icon",
+        "present": true,
+        "fg": [
+          255,
+          255,
+          255
+        ],
+        "bg": [
+          17,
+          21,
+          31
+        ],
+        "fgCss": "rgb(255, 255, 255)",
+        "contrast": 18.25,
+        "same": false
+      }
+    ]
+  },
+  {
+    "name": "04-blue-1B2A4A",
+    "brand": "#1B2A4A",
+    "expect": "light",
+    "kind": "dark",
+    "ok": true,
+    "surfaces": [
+      {
+        "key": "launcher",
+        "present": true,
+        "fg": [
+          255,
+          255,
+          255
+        ],
+        "bg": [
+          27,
+          42,
+          74
+        ],
+        "fgCss": "rgb(255, 255, 255)",
+        "contrast": 14.22,
+        "same": false
+      },
+      {
+        "key": "header-name",
+        "present": true,
+        "fg": [
+          255,
+          255,
+          255
+        ],
+        "bg": [
+          27,
+          42,
+          74
+        ],
+        "fgCss": "rgb(255, 255, 255)",
+        "contrast": 14.22,
+        "same": false
+      },
+      {
+        "key": "user-bubble",
+        "present": true,
+        "fg": [
+          255,
+          255,
+          255
+        ],
+        "bg": [
+          27,
+          42,
+          74
+        ],
+        "fgCss": "rgb(255, 255, 255)",
+        "contrast": 14.22,
+        "same": false
+      },
+      {
+        "key": "send-icon",
+        "present": true,
+        "fg": [
+          255,
+          255,
+          255
+        ],
+        "bg": [
+          27,
+          42,
+          74
+        ],
+        "fgCss": "rgb(255, 255, 255)",
+        "contrast": 14.22,
+        "same": false
+      }
+    ]
+  },
+  {
+    "name": "05-indigo-6366F1",
+    "brand": "#6366F1",
+    "expect": "dark",
+    "kind": "default",
+    "ok": true,
+    "surfaces": [
+      {
+        "key": "launcher",
+        "present": true,
+        "fg": [
+          0,
+          0,
+          0
+        ],
+        "bg": [
+          99,
+          102,
+          241
+        ],
+        "fgCss": "rgb(0, 0, 0)",
+        "contrast": 4.7,
+        "same": false
+      },
+      {
+        "key": "header-name",
+        "present": true,
+        "fg": [
+          0,
+          0,
+          0
+        ],
+        "bg": [
+          99,
+          102,
+          241
+        ],
+        "fgCss": "rgb(0, 0, 0)",
+        "contrast": 4.7,
+        "same": false
+      },
+      {
+        "key": "user-bubble",
+        "present": true,
+        "fg": [
+          0,
+          0,
+          0
+        ],
+        "bg": [
+          99,
+          102,
+          241
+        ],
+        "fgCss": "rgb(0, 0, 0)",
+        "contrast": 4.7,
+        "same": false
+      },
+      {
+        "key": "send-icon",
+        "present": true,
+        "fg": [
+          0,
+          0,
+          0
+        ],
+        "bg": [
+          99,
+          102,
+          241
+        ],
+        "fgCss": "rgb(0, 0, 0)",
+        "contrast": 4.7,
+        "same": false
+      }
+    ]
+  }
+]
