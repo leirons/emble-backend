@@ -15,6 +15,7 @@ import agentsRoutes from './modules/agents/agents.routes.js';
 import billingRoutes from './modules/billing/billing.routes.js';
 import webhooksRoutes from './modules/billing/webhooks.routes.js';
 import widgetRoutes from './modules/widget/widget.routes.js';
+import jobsRoutes from './modules/jobs/jobs.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -44,6 +45,9 @@ export function createApp() {
   app.use(express.static(path.join(__dirname, '..', 'public')));
 
   app.get('/health', (req, res) => res.json({ ok: true, env: env.nodeEnv }));
+
+  // --- Внутренние job-эндпоинты (serverless-очередь): их вызывает Upstash QStash ---
+  app.use('/internal/jobs', jobsRoutes);
 
   // --- Dashboard API (приложение управления, отдельный фронтенд) ---
   const dashboardCors = cors({ origin: env.dashboardOrigin, credentials: false });

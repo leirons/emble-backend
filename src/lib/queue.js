@@ -1,10 +1,43 @@
 import { Queue } from 'bullmq';
 import { createRedisConnection } from './redis.js';
+import { env } from '../config/env.js';
+import { logger } from './logger.js';
 
 export const QUEUE_NAMES = {
   INGESTION: 'knowledge-ingestion',
   CATALOG_IMPORT: 'catalog-import',
 };
+
+// Serverless-режим: если задан токен QStash, задачи ставятся в него, а не в BullMQ.
+const USE_QSTASH = !!env.qstash.token;
+
+/**
+ * Публикует задачу в Upstash QStash: он с гарантией доставки и ретраями вызовет наш
+ * HTTP-эндпоинт `${APP_URL}/internal/jobs/${topic}` с этим телом. Секрет пробрасывается
+ * заголовком x-job-secret (Upstash-Forward-*), дедупликация — по dedupId.
+ */
+async function publishToQStash(topic, payload, dedupId) {
+  const target = `${(env.appUrl || '').replace(/\/$/, '')}/internal/jobs/${topic}`;
+  const headers = {
+    Authorization: `Bearer ${env.qstash.token}`,
+    'Content-Type': 'application/json',
+    'Upstash-Retries': '3',
+  };
+  if (env.jobSecret) headers['Upstash-Forward-x-job-secret'] = env.jobSecret;
+  if (dedupId) headers['Upstash-Deduplication-Id'] = dedupId;
+
+  const res = await fetch(`${env.qstash.url}/v2/publish/${encodeURIComponent(target)}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    logger.error({ status: res.status, body: body.slice(0, 300), topic }, 'QStash publish failed');
+    throw new Error(`QStash publish failed: HTTP ${res.status}`);
+  }
+  return res.json().catch(() => ({}));
+}
 
 let ingestionQueue;
 let catalogImportQueue;
@@ -44,6 +77,7 @@ export function getCatalogImportQueue() {
  * @param {{ sourceId: string, agentId: string }} payload
  */
 export async function enqueueKnowledgeIngestion(payload) {
+  if (USE_QSTASH) return publishToQStash('ingestion', payload, `ingest-${payload.sourceId}`);
   const queue = getIngestionQueue();
   return queue.add('process-source', payload, { jobId: `ingest-${payload.sourceId}` });
 }
@@ -53,6 +87,7 @@ export async function enqueueKnowledgeIngestion(payload) {
  * @param {{ jobId: string, agentId: string }} payload
  */
 export async function enqueueCatalogImport(payload) {
+  if (USE_QSTASH) return publishToQStash('catalog-import', payload, `catalog-import-${payload.jobId}`);
   const queue = getCatalogImportQueue();
   return queue.add('import-products', payload, { jobId: `catalog-import-${payload.jobId}` });
 }

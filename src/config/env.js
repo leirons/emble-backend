@@ -21,6 +21,16 @@ export const env = {
   // KV_URL — имя, под которым строку подключения (rediss://) отдаёт интеграция Vercel KV / Upstash.
   redisUrl: process.env.REDIS_URL || process.env.KV_URL || 'redis://localhost:6379',
 
+  // Очередь фоновых задач. Если задан QSTASH_TOKEN — serverless-режим: Upstash QStash
+  // ставит задачу и сам вызывает наши HTTP-эндпоинты /internal/jobs/* (воркер не нужен).
+  // Иначе — классический BullMQ + отдельный процесс worker.js (локально / self-hosted).
+  qstash: {
+    token: process.env.QSTASH_TOKEN,
+    url: process.env.QSTASH_URL || 'https://qstash.upstash.io',
+  },
+  // Общий секрет для внутренних job-эндпоинтов — QStash пробрасывает его заголовком x-job-secret.
+  jobSecret: process.env.JOB_SECRET,
+
   jwt: {
     accessSecret: required('JWT_ACCESS_SECRET', 'dev-access-secret'),
     refreshSecret: required('JWT_REFRESH_SECRET', 'dev-refresh-secret'),
