@@ -1387,7 +1387,7 @@
           const optsFor = (sel) => ['<option value="">— не импортировать —</option>']
             .concat((p.fields || []).map((f) => `<option value="${escapeHtml(f)}"${f === sel ? ' selected' : ''}>${escapeHtml(f)}</option>`)).join('');
           box2.innerHTML = `
-            <div class="kb-preview-info">Формат: <b>${escapeHtml(p.format)}</b> · тег товара: <b>${escapeHtml(p.itemTag || '—')}</b> · позиций: <b>${p.count}</b></div>
+            <div class="kb-preview-info">Формат: <b>${escapeHtml(p.format)}</b> · тег товара: <b>${escapeHtml(p.itemTag || '—')}</b> · позиций: <b>${p.count}${p.truncated ? '+' : ''}</b>${p.truncated ? ' <span style="color:#8A8FA3;">(показан фрагмент большого фида — импортируются все)</span>' : ''}</div>
             <div class="kb-map-grid">
               ${MAP_FIELDS.map(([field, label]) => `
                 <div class="kb-map-row">
@@ -1405,13 +1405,9 @@
             setLoading(btn, true);
             try {
               const data = await api.importProductsFromUrl(agent.id, { ...params, mapping });
-              toast(`Импортировано товаров: ${data.count}`);
-              productMode = 'manual';
-              syncSegActive();
-              renderCatalogBody();
+              pollImportJob(data.jobId, data.total, box2);
             } catch (err) {
               showError('productsError', err);
-            } finally {
               setLoading(btn, false, 'Импортировать');
             }
           });
@@ -1435,41 +1431,47 @@
       }
     }
 
-    function startImport(file) {
-      showError('productsError', null);
-      const progress = document.getElementById('importProgress');
-      api.importProducts(agent.id, file).then((data) => {
-        const { jobId, total } = data;
-        progress.innerHTML = `
+    // Поллинг фоновой задачи импорта: рисует прогресс в containerEl, обновляет по мере готовности
+    // чанков. Используется и для файлового импорта, и для импорта по URL-фиду.
+    function pollImportJob(jobId, total, containerEl) {
+      if (containerEl) {
+        containerEl.innerHTML = `
           <div class="kb-progress">
             <div class="kb-progress-head">Импорт каталога</div>
             <div class="kb-progress-track"><div class="kb-progress-bar" id="ipBar" style="width:0%"></div></div>
             <div class="kb-progress-text" id="ipText">Обработка: 0 из ${total} товаров</div>
           </div>`;
-        const poll = setInterval(async () => {
-          try {
-            const st = await api.importJobStatus(agent.id, jobId);
-            const pct = st.total > 0 ? Math.round((st.processed / st.total) * 100) : 0;
-            const bar = document.getElementById('ipBar');
-            const txt = document.getElementById('ipText');
-            if (bar) bar.style.width = pct + '%';
-            if (txt) txt.textContent = 'Обработка: ' + st.processed + ' из ' + st.total + ' товаров';
-            if (st.status === 'completed') {
-              clearInterval(poll);
-              toast('Импортировано товаров: ' + st.total);
-              productMode = 'manual';
-              syncSegActive();
-              renderCatalogBody();
-            } else if (st.status === 'error') {
-              clearInterval(poll);
-              showError('productsError', st.error || 'Ошибка импорта');
-            }
-          } catch (pollErr) {
+      }
+      const poll = setInterval(async () => {
+        try {
+          const st = await api.importJobStatus(agent.id, jobId);
+          const pct = st.total > 0 ? Math.round((st.processed / st.total) * 100) : 0;
+          const bar = document.getElementById('ipBar');
+          const txt = document.getElementById('ipText');
+          if (bar) bar.style.width = pct + '%';
+          if (txt) txt.textContent = 'Обработка: ' + st.processed + ' из ' + st.total + ' товаров';
+          if (st.status === 'completed') {
             clearInterval(poll);
-            showError('productsError', pollErr);
+            toast('Импортировано товаров: ' + st.total);
+            productMode = 'manual';
+            syncSegActive();
+            renderCatalogBody();
+          } else if (st.status === 'error') {
+            clearInterval(poll);
+            showError('productsError', st.error || 'Ошибка импорта');
           }
-        }, 2000);
-      }).catch((err) => showError('productsError', err));
+        } catch (pollErr) {
+          clearInterval(poll);
+          showError('productsError', pollErr);
+        }
+      }, 2000);
+    }
+
+    function startImport(file) {
+      showError('productsError', null);
+      api.importProducts(agent.id, file)
+        .then((data) => pollImportJob(data.jobId, data.total, document.getElementById('importProgress')))
+        .catch((err) => showError('productsError', err));
     }
 
     async function loadProducts() {

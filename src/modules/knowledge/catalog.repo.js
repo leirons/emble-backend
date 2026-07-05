@@ -58,6 +58,7 @@ export async function insertProductsBulk(agentId, products) {
   const { rows } = await query(
     `INSERT INTO agent_products (id, agent_id, sku, name, description, price, currency, url, image_url, category, embedding)
      VALUES ${values.join(', ')}
+     ON CONFLICT (id) DO NOTHING
      RETURNING ${PRODUCT_COLUMNS}`,
     params
   );
@@ -278,6 +279,28 @@ export async function getImportJobWithData(jobId) {
   return rows[0] || null;
 }
 
+/** Лёгкий чтение метаданных задачи без тяжёлого rows_data (для чанковой обработки). */
+export async function getImportJobMeta(jobId) {
+  const { rows } = await query(
+    `SELECT id, agent_id AS "agentId", status, total_rows AS "totalRows", processed_rows AS "processedRows"
+     FROM catalog_import_jobs WHERE id = $1`,
+    [jobId]
+  );
+  return rows[0] || null;
+}
+
+/** Возвращает срез строк задачи [offset+1 .. offset+limit] — чтобы не тянуть весь rows_data на каждый чанк. */
+export async function getImportJobRowsSlice(jobId, offset, limit) {
+  const { rows } = await query(
+    `SELECT COALESCE(jsonb_agg(t.e ORDER BY t.n), '[]'::jsonb) AS slice
+     FROM catalog_import_jobs j
+     CROSS JOIN LATERAL jsonb_array_elements(j.rows_data) WITH ORDINALITY AS t(e, n)
+     WHERE j.id = $1 AND j.rows_data IS NOT NULL AND t.n > $2 AND t.n <= $3`,
+    [jobId, offset, offset + limit]
+  );
+  return rows[0]?.slice || [];
+}
+
 export async function updateImportJobProgress(jobId, processedRows) {
   await query(
     `UPDATE catalog_import_jobs SET processed_rows = $1, updated_at = now() WHERE id = $2`,
@@ -313,6 +336,8 @@ export default {
   insertImportJob,
   getImportJob,
   getImportJobWithData,
+  getImportJobMeta,
+  getImportJobRowsSlice,
   updateImportJobProgress,
   updateImportJobStatus,
   clearImportJobData,

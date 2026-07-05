@@ -87,9 +87,12 @@ export async function enqueueKnowledgeIngestion(payload) {
  * @param {{ jobId: string, agentId: string }} payload
  */
 export async function enqueueCatalogImport(payload) {
-  if (USE_QSTASH) return publishToQStash('catalog-import', payload, `catalog-import-${payload.jobId}`);
+  // Дедуп включает cursor: каждый чанк — отдельное сообщение, иначе дозапуск следующего
+  // чанка (тот же jobId) был бы отброшен как дубликат.
+  const dedup = `catalog-import-${payload.jobId}-${payload.cursor ?? 0}`;
+  if (USE_QSTASH) return publishToQStash('catalog-import', payload, dedup);
   const queue = getCatalogImportQueue();
-  return queue.add('import-products', payload, { jobId: `catalog-import-${payload.jobId}` });
+  return queue.add('import-products', payload, { jobId: dedup });
 }
 
 /**

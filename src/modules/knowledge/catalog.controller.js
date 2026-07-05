@@ -48,7 +48,7 @@ export async function getImportJobStatus(req, res) {
 
 export async function importProductsFromUrl(req, res) {
   const result = await service.importProductsFromUrl(req.auth.orgId, req.params.agentId, req.body);
-  res.status(201).json(result);
+  res.status(202).json(result);
 }
 
 export default { listProducts, createProduct, updateProduct, deleteProduct, clearProducts, importProducts, importProductsFromUrl, previewFeed, getImportJobStatus };

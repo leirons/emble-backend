@@ -432,25 +432,59 @@ async function ingestRows(agentId, rawRows, mappingOverride) {
   return catalogRepo.insertProductsBulk(agentId, withIds);
 }
 
-/**
- * Импорт каталога с внешнего API по URL. Поддерживает произвольный метод и заголовки
- * (например, Authorization: Bearer ...) — данные тянутся с защищённого эндпоинта клиента.
- */
-/**
- * Скачивает URL и парсит ответ в массив сырых строк. Формат определяется по параметру
- * format, Content-Type или содержимому: JSON, XML-фид (YML/RSS) или CSV.
- */
-async function fetchFeedRows(url, { method, headers, format, itemSelector } = {}) {
+const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // превью читает только начало большого фида
+
+/** Обрезает XML до последнего полностью закрытого товара — чтобы cheerio не спотыкался
+ *  об оборванный на середине элемент при чтении только части большого фида. */
+function trimToLastItem(xml) {
+  let cut = -1;
+  for (const tag of ['</offer>', '</item>', '</product>', '</entry>']) {
+    const i = xml.lastIndexOf(tag);
+    if (i >= 0) cut = Math.max(cut, i + tag.length);
+  }
+  return cut > 0 ? xml.slice(0, cut) : xml;
+}
+
+/** Скачивает URL, читая не более maxBytes (для превью больших фидов). Возвращает текст,
+ *  Content-Type и флаг truncated (был ли ответ обрезан по лимиту). */
+async function fetchFeedText(url, { method, headers } = {}, maxBytes) {
   let res;
   try {
-    res = await fetch(url, { method: method || 'GET', headers: headers || {}, signal: AbortSignal.timeout(20000) });
+    res = await fetch(url, { method: method || 'GET', headers: headers || {}, signal: AbortSignal.timeout(25000) });
   } catch (err) {
     throw badRequest(`Не удалось запросить URL: ${err instanceof Error ? err.message : String(err)}`);
   }
   if (!res.ok) throw badRequest(`Источник вернул HTTP ${res.status}`);
-
-  const text = await res.text();
   const contentType = res.headers.get('content-type') || '';
+
+  if (!maxBytes || !res.body) {
+    return { text: await res.text(), contentType, truncated: false };
+  }
+  const reader = res.body.getReader();
+  const chunks = [];
+  let total = 0;
+  let truncated = false;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(Buffer.from(value));
+    total += value.length;
+    if (total >= maxBytes) {
+      truncated = true;
+      try { await reader.cancel(); } catch { /* поток уже закрыт */ }
+      break;
+    }
+  }
+  return { text: Buffer.concat(chunks).toString('utf8'), contentType, truncated };
+}
+
+/**
+ * Скачивает URL и парсит ответ в массив сырых строк. Формат определяется по параметру format,
+ * Content-Type или содержимому: JSON, XML-фид (YML/RSS) или CSV. maxBytes ограничивает объём
+ * загрузки (для превью), при этом XML обрезается до последнего целого товара.
+ */
+async function fetchFeedRows(url, { method, headers, format, itemSelector } = {}, maxBytes) {
+  const { text, contentType, truncated } = await fetchFeedText(url, { method, headers }, maxBytes);
   const trimmed = text.replace(/^﻿/, '').trimStart();
 
   let detected = format;
@@ -467,7 +501,7 @@ async function fetchFeedRows(url, { method, headers, format, itemSelector } = {}
     try {
       parsed = JSON.parse(text);
     } catch {
-      throw badRequest('Ответ не является корректным JSON');
+      throw badRequest(truncated ? 'JSON слишком большой для предпросмотра — укажите формат вручную' : 'Ответ не является корректным JSON');
     }
     rawRows = Array.isArray(parsed)
       ? parsed
@@ -479,38 +513,56 @@ async function fetchFeedRows(url, { method, headers, format, itemSelector } = {}
             ? parsed.offers
             : [];
   } else if (detected === 'xml') {
-    const parsed = xmlToObjects(text, { itemSelector });
+    const parsed = xmlToObjects(truncated ? trimToLastItem(text) : text, { itemSelector });
     rawRows = parsed.rows;
     itemTag = parsed.itemTag;
   } else {
     rawRows = csvToObjects(text);
   }
 
-  return { rawRows, format: detected, itemTag };
+  return { rawRows, format: detected, itemTag, truncated };
 }
 
 /**
- * Импорт каталога с внешнего URL/API. Формат — JSON, XML-фид (YML/Google Merchant) или CSV.
- * mapping (наше поле → тег фида) и itemSelector позволяют вручную задать разбор.
+ * Импорт каталога с внешнего URL/API — асинхронно, через фоновую задачу с чанковой обработкой.
+ * Скачивает и парсит фид, создаёт import job и ставит её в очередь; тяжёлая часть (эмбеддинги +
+ * запись) идёт партиями в фоне. mapping (наше поле → тег фида) и itemSelector задают разбор.
  */
 export async function importProductsFromUrl(orgId, agentId, { url, method, headers, format, itemSelector, mapping }) {
   await assertAgentOwnership(orgId, agentId);
   const { rawRows } = await fetchFeedRows(url, { method, headers, format, itemSelector });
-  const products = await ingestRows(agentId, rawRows, mapping);
-  return { products, count: products.length };
+  if (rawRows.length === 0) throw badRequest('Фид пуст или не удалось распознать позиции');
+  if (rawRows.length > MAX_IMPORT_ROWS) {
+    throw badRequest(`Слишком много позиций (${rawRows.length}). Максимум ${MAX_IMPORT_ROWS} за один импорт.`);
+  }
+  const { products: rows } = rowsToProducts(rawRows, mapping);
+  if (rows.length === 0) {
+    const found = Object.keys(rawRows[0] || {}).join(', ');
+    throw badRequest(`Не удалось найти поле с названием товара среди [${found}]. Сопоставьте поле «Название».`);
+  }
+
+  const withIds = rows.map((r) => ({ id: uuid(), ...r }));
+  const jobId = uuid();
+  await catalogRepo.insertImportJob({ id: jobId, agentId, totalRows: withIds.length, rowsData: withIds });
+  await enqueueCatalogImport({ jobId, agentId, cursor: 0 });
+  return { jobId, total: withIds.length };
 }
 
 /**
  * Предпросмотр фида без импорта: возвращает определённый формат, тег товара, число позиций,
- * список доступных полей, предложенный авто-маппинг и несколько примеров строк — чтобы
- * владелец мог сопоставить поля вручную перед импортом.
+ * список доступных полей, предложенный авто-маппинг и несколько примеров строк — чтобы владелец
+ * сопоставил поля вручную перед импортом. Большой фид читается частично (PREVIEW_MAX_BYTES).
  */
 export async function previewFeed(orgId, agentId, { url, method, headers, format, itemSelector }) {
   await assertAgentOwnership(orgId, agentId);
-  const { rawRows, format: detected, itemTag } = await fetchFeedRows(url, { method, headers, format, itemSelector });
+  const { rawRows, format: detected, itemTag, truncated } = await fetchFeedRows(
+    url,
+    { method, headers, format, itemSelector },
+    PREVIEW_MAX_BYTES
+  );
   const fields = Array.from(new Set(rawRows.slice(0, 50).flatMap((r) => Object.keys(r || {}))));
   const suggestedMapping = rawRows.length ? inferColumns(rawRows) : {};
-  return { format: detected, itemTag, count: rawRows.length, fields, suggestedMapping, sample: rawRows.slice(0, 5) };
+  return { format: detected, itemTag, count: rawRows.length, truncated, fields, suggestedMapping, sample: rawRows.slice(0, 5) };
 }
 
 export async function getImportJobStatus(orgId, agentId, jobId) {
