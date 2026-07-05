@@ -122,9 +122,30 @@
     'Создать': 'Створити',
   };
 
+  // Английский словарь — пока только для экрана входа (остальной дашборд вне задачи).
+  const TRANSLATIONS_EN = {
+    'Вход': 'Log in',
+    'Регистрация': 'Sign up',
+    'Войти': 'Log in',
+    'Выйти': 'Log out',
+    'С возвращением': 'Welcome back',
+    'Войдите, чтобы управлять агентами.': 'Log in to manage your agents.',
+    'Пароль': 'Password',
+    'Демо-доступ:': 'Demo access:',
+    '(после npm run seed)': '(after npm run seed)',
+    'Создать аккаунт': 'Create an account',
+    'Бесплатный тариф навсегда, без карты.': 'Free plan forever, no card.',
+    'Название организации': 'Organization name',
+    'Минимум 8 символов': 'At least 8 characters',
+    'Создать агента бесплатно': 'Create an agent for free',
+  };
+
   function t(str) {
     if (lang === 'uk' && TRANSLATIONS[str]) {
       return TRANSLATIONS[str];
+    }
+    if (lang === 'en' && TRANSLATIONS_EN[str]) {
+      return TRANSLATIONS_EN[str];
     }
     return str;
   }
@@ -366,6 +387,8 @@
     }
   }
 
+  function renderAgentDetail(agent) {
+    const isPublished = agent.status === 'published';
     currentAgent = agent;
     agentDetailView.innerHTML = `
       <a href="#" class="detail-back" id="backToList">&larr; ${t('Все агенты')}</a>
@@ -2173,6 +2196,11 @@
           applyLanguage('ru');
         });
       });
+      document.querySelectorAll('.lang-btn-en').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          applyLanguage('en');
+        });
+      });
     };
     bindBtns();
   }
@@ -2189,6 +2217,9 @@
     });
     document.querySelectorAll('.lang-btn-ru').forEach((btn) => {
       btn.style.color = lang === 'ru' ? '#818CF8' : '#6B7280';
+    });
+    document.querySelectorAll('.lang-btn-en').forEach((btn) => {
+      btn.style.color = lang === 'en' ? '#818CF8' : '#6B7280';
     });
 
     document.documentElement.lang = lang;

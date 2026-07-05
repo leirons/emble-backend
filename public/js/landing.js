@@ -5,6 +5,9 @@
   } catch (e) {}
   if (!lang) lang = 'uk';
 
+  // Быстрый выбор инлайн-строки под текущий язык (uk по умолчанию).
+  function L(uk, ru, en) { return lang === 'ru' ? ru : lang === 'en' ? en : uk; }
+
   const TRANSLATIONS = {
     uk: {
       page_title: 'ШІ чат-бот для інтернет-магазину | Emble — чат-віджет на сайт за 5 хвилин',
@@ -189,6 +192,98 @@
       footer_contacts: 'Контакты',
       copied: 'Скопировано',
       copy_code: 'Copy Code',
+    },
+    en: {
+      page_title: 'AI Chatbot for Online Stores | Emble — chat widget on your site in 5 minutes',
+      nav_templates: 'Templates',
+      nav_customize: 'Customize',
+      nav_integration: 'Integration',
+      nav_how: 'How it works',
+      nav_faq: 'FAQ',
+      nav_contacts: 'Contacts',
+      nav_login: 'Log in',
+      hero_badge: 'New: AI agents on GPT-4o and Claude',
+      hero_title: 'Bring your online store to life with a smart<br><span class="grad">AI chatbot</span> in 5 minutes',
+      hero_desc: 'Set up the AI logic, style the chat widget to match your brand, and embed it on your site with one line of code. No developers, no complex integrations.',
+      hero_cta_panel: 'Go to dashboard',
+      hero_cta_how: 'How it works',
+      demo_step1: 'Step 1 · Choose an agent',
+      demo_title: 'Widget control panel',
+      demo_foot: 'Changes apply to the preview instantly',
+      w_status: 'online',
+      w_input_placeholder: 'Type a message…',
+      ff_eyebrow: 'Form factors',
+      ff_title: 'One agent — any format',
+      ff_desc: 'Choose how the widget lives on the page. The logic stays the same — only the shell changes.',
+      ff_floating_desc: 'A floating button in the corner — the classic for support across the whole site.',
+      ff_inline_desc: 'Embeds right inside an article or landing page as part of the content.',
+      ff_side_desc: 'A slide-out half-screen panel for in-depth consultations.',
+      ff_minimal_desc: 'An unobtrusive hint bubble without an open chat window.',
+      custom_step2: 'Step 2 · Customization',
+      custom_title: 'Build the widget for your brand',
+      custom_desc: 'Avatar, brand colors, greeting and quick replies — without a single line of CSS.',
+      custom_avatar: 'Assistant avatar',
+      custom_color: 'Brand color',
+      custom_welcome: 'Welcome message',
+      custom_welcome_box: 'Hi! I\'m your AI assistant. How can I help you today?',
+      custom_replies: 'Quick replies',
+      reply_prices: 'See prices',
+      reply_demo: 'Book a demo',
+      reply_contacts: 'Contact us',
+      reply_add: '+ add',
+      preview_agent_name: 'Your assistant',
+      preview_agent_status: 'online',
+      preview_agent_msg: 'Hi! I\'m your AI assistant. How can I help?',
+      preview_input_placeholder: 'Type a message…',
+      sb_eyebrow: 'Live playground',
+      sb_title: 'Try the widget right here',
+      sb_desc: 'Switch the form, position, theme and accent — the browser window updates instantly, just like on a real site.',
+      sb_form: 'Form',
+      sb_pos: 'Position',
+      sb_theme: 'Site theme',
+      sb_accent: 'Accent',
+      sb_widget_open: 'Widget open',
+      uc_eyebrow: 'Scenarios in action',
+      uc_title: 'Not just a chat — it gets things done',
+      uc_desc: 'The agent recommends products, tracks delivery and qualifies leads right in the conversation.',
+      int_eyebrow: 'Step 3 · Integration',
+      int_title: 'One line — and the agent is live',
+      int_desc: 'Paste the script before the closing body tag. The widget loads asynchronously and won\'t slow your page down.',
+      how_eyebrow: 'How it works',
+      how_title: 'Three simple steps to launch',
+      how_step1_title: 'Train the AI',
+      how_step1_desc: 'Upload text, links or a knowledge base — or just describe the behavior with a prompt.',
+      how_step2_title: 'Design it',
+      how_step2_desc: 'Pick the form, brand colors, avatar and quick replies in the visual builder.',
+      how_step3_title: 'Paste the code',
+      how_step3_desc: 'One line on Shopify, WooCommerce, Wix or any custom site — and the agent is already working.',
+      faq_eyebrow: 'FAQ',
+      faq_title: 'Frequently asked questions about chatbots for online stores',
+      faq_q1: 'What is an AI chatbot for an online store?',
+      faq_a1: 'It\'s an AI-powered chat widget that installs on your store and talks to shoppers 24/7: it answers questions about products, shipping and payment, recommends items from your catalog, and collects customer contacts. Emble is trained on your store\'s own knowledge base, so it answers accurately and doesn\'t make things up.',
+      faq_q2: 'How do I install the chat widget on my online store?',
+      faq_a2: 'Just paste one line of code before the closing body tag — the widget works on any platform: Shopify, WooCommerce, Wix, BigCommerce, or a custom site. Installation takes about 5 minutes and needs no developer.',
+      faq_q3: 'Does the chatbot adapt to any language?',
+      faq_a3: 'Yes. The bot automatically detects the shopper\'s language and replies in it — English, Spanish, German or any other. It detects the language for every message, so a conversation can even switch between languages.',
+      faq_q4: 'What can the e-commerce AI assistant do?',
+      faq_a4: 'It answers common questions about shipping, payment and returns, recommends products from your catalog with prices and links, collects leads (email or phone), guides shoppers through button-based scenarios, and hands complex conversations off to a live operator.',
+      faq_q5: 'How do I train the bot on my store\'s data?',
+      faq_a5: 'Upload files (PDF, DOCX), add links to your site\'s pages, ready-made question–answer pairs, or import your product catalog. The bot indexes this data and answers based on it, and for questions it can\'t answer it offers to leave a contact.',
+      faq_q6: 'How much does the Emble chatbot cost?',
+      faq_a6: 'Access to the dashboard is granted on individual terms — you receive your login and password from our team. Log in or contact us to discuss a plan that fits your message volume.',
+      cta_title: 'Manage your AI agents',
+      cta_desc: 'Log in to the dashboard with your username and password — create, configure and embed agents on your site.',
+      cta_btn: 'Go to dashboard',
+      contacts_eyebrow: 'Contacts',
+      contacts_title: 'Still have questions?<br>Get in touch',
+      contacts_desc: 'We\'ll help you set up the agent and find the right solution for your case. We reply during business hours.',
+      contact_tg: 'Telegram',
+      contact_phone: 'Phone',
+      contact_email: 'Email',
+      footer_copy: '© 2026 · All rights reserved',
+      footer_contacts: 'Contacts',
+      copied: 'Copied',
+      copy_code: 'Copy Code',
     }
   };
 
@@ -324,6 +419,72 @@
       pg_iw_name_inline: 'Встроенный ассистент',
       pg_bubble_inline: 'Готов ответить на вопросы прямо в статье — спросите что угодно.',
       pg_chips_inline: ['Тарифы', 'Демо'],
+    },
+    en: {
+      TEMPLATES: [
+        {
+          id: 'support', name: 'Chat support', desc: 'Answers customer questions 24/7',
+          accent: '#6366F1', accent2: '#8B5CF6', glow: 'rgba(99,102,241,0.45)', chipBg: 'rgba(99,102,241,0.08)', initial: 'S',
+          greeting: 'Hi! I\'m here 24/7 — tell me how I can help.',
+          replies: ['Order status', 'Start a return', 'Talk to an operator'],
+        },
+        {
+          id: 'sales', name: 'Sales assistant', desc: 'Guides the customer to purchase',
+          accent: '#10B981', accent2: '#34D399', glow: 'rgba(16,185,129,0.42)', chipBg: 'rgba(16,185,129,0.08)', initial: 'S',
+          greeting: 'Looking for something specific? I\'ll help you find the right option.',
+          replies: ['Find a plan', 'Compare plans', 'Get a discount'],
+        },
+        {
+          id: 'leads', name: 'Lead generator', desc: 'Collects and qualifies contacts',
+          accent: '#8B5CF6', accent2: '#A78BFA', glow: 'rgba(139,92,246,0.44)', chipBg: 'rgba(139,92,246,0.08)', initial: 'L',
+          greeting: 'Leave a contact — we\'ll send a personalized demo for your case.',
+          replies: ['Book a demo', 'Download pricing', 'Request a call'],
+        },
+      ],
+      SCENARIOS: {
+        products: {
+          label: '🛍️ Product recommendations', emoji: '🛍️', botName: 'Store assistant',
+          title: 'Picks products like a live salesperson',
+          desc: 'The agent clarifies the need, factors in the budget and suggests specific items with a price and a buy button — right in the chat.',
+          points: ['Understands requests in natural language', 'Shows cards with price and discount', 'Guides the customer to the cart without leaving the page'],
+          userMsg: 'Recommend running shoes under $120',
+          botMsg: 'Sure! For running and that budget, two options fit perfectly 👇',
+          replies: ['Show more', 'Do you have size 42?', 'Compare models'],
+        },
+        delivery: {
+          label: '📦 Shipping question', emoji: '📦', botName: 'Shipping support',
+          title: 'Knows the store\'s shipping rules',
+          desc: 'The agent is trained on your store\'s terms and confidently answers follow-up questions — which carriers are available, timelines and payment methods.',
+          points: ['Knows available carriers and shipping methods', 'Answers by the rules from your knowledge base', 'Takes the load off support 24/7'],
+          userMsg: 'Do you offer international shipping?',
+          botMsg: 'One sec, let me check the store\'s rules 👇',
+          replies: ['Delivery times', 'Cost', 'Payment on delivery'],
+        },
+        leads: {
+          label: '🎯 Lead capture', emoji: '🎯', botName: 'Sales manager',
+          title: 'Qualifies and collects contacts',
+          desc: 'The agent uncovers the task, handles objections and gently collects a contact, passing a warm lead to your CRM.',
+          points: ['Asks qualifying questions', 'Collects name and contact in a form', 'Sends the lead to your CRM automatically'],
+          userMsg: 'I want to understand if this fits my business',
+          botMsg: 'We\'ll find a solution for your case. Leave a contact — we\'ll send a personalized demo 👇',
+          replies: ['How much is it?', 'Any integrations?', 'Request a call'],
+        },
+      },
+      UC_PRODUCTS: [
+        { name: 'Aero Run 2', tag: 'Top', price: '$79', old: '$99', swatch: 'linear-gradient(135deg,#6366F1,#8B5CF6)' },
+        { name: 'Swift Trail', tag: '-20%', price: '$89', old: '$109', swatch: 'linear-gradient(135deg,#10B981,#34D399)' },
+      ],
+      UC_DELIVERY: 'Yes, of course! We ship worldwide via DHL and UPS — both to a pickup point and by courier to your door. Delivery usually takes 3–7 days, paid at the carrier\'s rate. Cash on delivery is available in select regions.',
+      pg_replies_float: ['Pricing', 'Demo'],
+      pg_fw_status2: 'in-depth consultation',
+      pg_fw_name_consultant: 'Consultant',
+      pg_fw_name_assistant: 'Your assistant',
+      pg_bubble_consultant: 'Hi! Tell me about your task — I\'ll find a solution and create a request.',
+      pg_bubble_user: 'I need a CRM integration',
+      pg_bubble_assistant: 'Hi! How can I help you today?',
+      pg_iw_name_inline: 'Embedded assistant',
+      pg_bubble_inline: 'Ready to answer questions right in the article — ask me anything.',
+      pg_chips_inline: ['See prices', 'Book a demo'],
     }
   };
 
@@ -406,7 +567,7 @@
     brandPreviewHeader.style.background = brand.color;
     brandPreviewSend.style.background = brand.color;
     brandPreviewCard.style.boxShadow = `0 30px 70px rgba(0,0,0,0.55), 0 0 46px ${brand.glow}`;
-    const chipsLabels = lang === 'uk' ? ['Дізнатись ціни', 'Замовити демо'] : ['Узнать цены', 'Заказать демо'];
+    const chipsLabels = L(['Дізнатись ціни', 'Замовити демо'], ['Узнать цены', 'Заказать демо'], ['See prices', 'Book a demo']);
     brandPreviewChips.innerHTML = chipsLabels.map((label) =>
       `<span style="font-size:12px; padding:7px 11px; border-radius:999px; border:1px solid ${brand.color}; color:${brand.color};">${label}</span>`
     ).join('');
@@ -461,8 +622,8 @@
   function renderPlayground() {
     const l = DATA[lang];
     pgSeg(pgForm, [['floating', 'Floating Chat'], ['panel', 'Side Panel'], ['inline', 'Inline Block']], 'form');
-    pgSeg(pgPos, [['left', lang === 'uk' ? 'Ліворуч' : 'Слева'], ['right', lang === 'uk' ? 'Праворуч' : 'Справа']], 'pos');
-    pgSeg(pgTheme, [['dark', lang === 'uk' ? 'Темна' : 'Тёмная'], ['light', lang === 'uk' ? 'Світла' : 'Светлая']], 'theme');
+    pgSeg(pgPos, [['left', L('Ліворуч', 'Слева', 'Left')], ['right', L('Праворуч', 'Справа', 'Right')]], 'pos');
+    pgSeg(pgTheme, [['dark', L('Темна', 'Тёмная', 'Dark')], ['light', L('Світла', 'Светлая', 'Light')]], 'theme');
     pgAccent.innerHTML = Object.keys(PG_ACCENTS).map((c) =>
       `<button type="button" class="pg-acc${c === pg.accent ? ' active' : ''}" data-c="${c}" style="background:${c}; box-shadow:0 0 12px ${PG_ACCENTS[c]};"></button>`
     ).join('');
@@ -514,7 +675,7 @@
         <div class="pg-fw-body">
           <div class="pg-bubble" style="background:rgba(255,255,255,0.06); color:#D8DBE3;">${l.pg_bubble_assistant}</div>
           <div class="pg-chips">${l.pg_replies_float.map(chip => `<span class="pg-chip" style="border-color:${acc}; color:${acc};">${chip}</span>`).join('')}</div>
-          <div class="pg-input-row"><span class="pg-input">${lang === 'uk' ? 'Повідомлення…' : 'Сообщение…'}</span><span class="pg-send" style="background:${acc};">${SEND_SVG}</span></div>
+          <div class="pg-input-row"><span class="pg-input">${L('Повідомлення…', 'Сообщение…', 'Message…')}</span><span class="pg-send" style="background:${acc};">${SEND_SVG}</span></div>
         </div>
       </div>`;
     }
@@ -529,7 +690,7 @@
           <div class="pg-bubble" style="background:rgba(255,255,255,0.06); color:#D8DBE3; margin-bottom:12px;">${l.pg_bubble_consultant}</div>
           <div class="pg-bubble-user" style="background:${acc};">${l.pg_bubble_user}</div>
         </div>
-        <div class="pg-panel-foot"><span class="pg-input">${lang === 'uk' ? 'Повідомлення…' : 'Сообщение…'}</span><span class="pg-send" style="background:${acc};">${SEND_SVG}</span></div>
+        <div class="pg-panel-foot"><span class="pg-input">${L('Повідомлення…', 'Сообщение…', 'Message…')}</span><span class="pg-send" style="background:${acc};">${SEND_SVG}</span></div>
       </div>`;
     }
     pgPage.innerHTML = html;
@@ -571,18 +732,18 @@
           <div class="uc-prod-body">
             <div class="uc-prod-name">${pr.name}</div>
             <div class="uc-prod-price"><b>${pr.price}</b><s>${pr.old}</s></div>
-            <a href="#" class="uc-prod-link">${lang === 'uk' ? 'Перейти до товару' : 'Перейти к товару'} ${ARROW_SVG}</a>
+            <a href="#" class="uc-prod-link">${L('Перейти до товару', 'Перейти к товару', 'View product')} ${ARROW_SVG}</a>
           </div>
         </div>`).join('')}</div>`;
     } else if (ucActive === 'delivery') {
       scenarioBlock = `<div class="uc-msg-bot" style="max-width:88%; border-radius:14px;">${DATA[lang].UC_DELIVERY}</div>`;
     } else {
       scenarioBlock = `<div class="uc-lead">
-        <div class="uc-lead-title">${lang === 'uk' ? 'Залиште контакт — підготуємо демо' : 'Оставьте контакт — подготовим демо'}</div>
+        <div class="uc-lead-title">${L('Залиште контакт — підготуємо демо', 'Оставьте контакт — подготовим демо', 'Leave a contact — we\'ll prepare a demo')}</div>
         <div class="uc-lead-fields">
-          <span class="uc-lead-input">${lang === 'uk' ? 'Ваше ім\'я' : 'Ваше имя'}</span>
-          <span class="uc-lead-input">${lang === 'uk' ? 'Email або телефон' : 'Email или телефон'}</span>
-          <span class="uc-lead-btn">${lang === 'uk' ? 'Отримати демо' : 'Получить демо'}</span>
+          <span class="uc-lead-input">${L('Ваше ім\'я', 'Ваше имя', 'Your name')}</span>
+          <span class="uc-lead-input">${L('Email або телефон', 'Email или телефон', 'Email or phone')}</span>
+          <span class="uc-lead-btn">${L('Отримати демо', 'Получить демо', 'Get a demo')}</span>
         </div>
       </div>`;
     }
@@ -590,7 +751,7 @@
     ucChat.innerHTML =
       `<div class="uc-chat-head">
         <span class="uc-chat-av">AI</span>
-        <span style="flex:1;"><span class="uc-chat-name">${s.botName}</span><span class="uc-chat-typing"><span class="pg-online"></span> ${lang === 'uk' ? 'друкує…' : 'печатает…'}</span></span>
+        <span style="flex:1;"><span class="uc-chat-name">${s.botName}</span><span class="uc-chat-typing"><span class="pg-online"></span> ${L('друкує…', 'печатает…', 'typing…')}</span></span>
       </div>
       <div class="uc-chat-body">
         <div class="uc-msg-user">${s.userMsg}</div>
@@ -603,21 +764,17 @@
   // --- Языковой переключатель ---
   const btnUa = document.getElementById('btnLangUa');
   const btnRu = document.getElementById('btnLangRu');
+  const btnEn = document.getElementById('btnLangEn');
 
   function updateSwitcherStyles() {
-    if (!btnUa || !btnRu) return;
-    if (lang === 'uk') {
-      btnUa.style.color = '#818CF8';
-      btnRu.style.color = '#6B7280';
-    } else {
-      btnUa.style.color = '#6B7280';
-      btnRu.style.color = '#818CF8';
-    }
+    [[btnUa, 'uk'], [btnRu, 'ru'], [btnEn, 'en']].forEach(function (pair) {
+      if (pair[0]) pair[0].style.color = lang === pair[1] ? '#818CF8' : '#6B7280';
+    });
   }
 
   function applyLanguage() {
-    document.documentElement.lang = lang === 'uk' ? 'uk' : 'ru';
-    
+    document.documentElement.lang = lang;
+
     // Переводим все статические элементы с data-i18n
     document.querySelectorAll('[data-i18n]').forEach((el) => {
       const key = el.dataset.i18n;
@@ -643,18 +800,14 @@
     updateSwitcherStyles();
   }
 
-  if (btnUa && btnRu) {
-    btnUa.addEventListener('click', () => {
-      lang = 'uk';
-      try { localStorage.setItem('emble.lang', 'uk'); } catch (e) {}
-      applyLanguage();
-    });
-    btnRu.addEventListener('click', () => {
-      lang = 'ru';
-      try { localStorage.setItem('emble.lang', 'ru'); } catch (e) {}
-      applyLanguage();
-    });
+  function setLang(l) {
+    lang = l;
+    try { localStorage.setItem('emble.lang', l); } catch (e) {}
+    applyLanguage();
   }
+  if (btnUa) btnUa.addEventListener('click', () => setLang('uk'));
+  if (btnRu) btnRu.addEventListener('click', () => setLang('ru'));
+  if (btnEn) btnEn.addEventListener('click', () => setLang('en'));
 
   // Инициализация
   applyLanguage();
