@@ -87,9 +87,9 @@ export async function enqueueKnowledgeIngestion(payload) {
  * @param {{ jobId: string, agentId: string }} payload
  */
 export async function enqueueCatalogImport(payload) {
-  // Дедуп включает cursor: каждый чанк — отдельное сообщение, иначе дозапуск следующего
-  // чанка (тот же jobId) был бы отброшен как дубликат.
-  const dedup = `catalog-import-${payload.jobId}-${payload.cursor ?? 0}`;
+  // Дедуп включает фазу/cursor: prepare-сообщение и каждый чанк — отдельные сообщения,
+  // иначе дозапуск следующего шага (тот же jobId) был бы отброшен как дубликат.
+  const dedup = `catalog-import-${payload.jobId}-${payload.phase ?? payload.cursor ?? 0}`;
   if (USE_QSTASH) return publishToQStash('catalog-import', payload, dedup);
   const queue = getCatalogImportQueue();
   return queue.add('import-products', payload, { jobId: dedup });

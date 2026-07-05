@@ -524,28 +524,38 @@ async function fetchFeedRows(url, { method, headers, format, itemSelector } = {}
 }
 
 /**
- * Импорт каталога с внешнего URL/API — асинхронно, через фоновую задачу с чанковой обработкой.
- * Скачивает и парсит фид, создаёт import job и ставит её в очередь; тяжёлая часть (эмбеддинги +
- * запись) идёт партиями в фоне. mapping (наше поле → тег фида) и itemSelector задают разбор.
+ * Скачивает и парсит фид в готовые к вставке строки (с id). Вызывается фоновой prepare-фазой
+ * импорта (catalog-import.worker.js), чтобы тяжёлая загрузка/парсинг шли НЕ в HTTP-запросе.
  */
-export async function importProductsFromUrl(orgId, agentId, { url, method, headers, format, itemSelector, mapping }) {
-  await assertAgentOwnership(orgId, agentId);
+export async function parseFeedToRows({ url, method, headers, format, itemSelector, mapping }) {
   const { rawRows } = await fetchFeedRows(url, { method, headers, format, itemSelector });
   if (rawRows.length === 0) throw badRequest('Фид пуст или не удалось распознать позиции');
   if (rawRows.length > MAX_IMPORT_ROWS) {
     throw badRequest(`Слишком много позиций (${rawRows.length}). Максимум ${MAX_IMPORT_ROWS} за один импорт.`);
   }
-  const { products: rows } = rowsToProducts(rawRows, mapping);
-  if (rows.length === 0) {
+  const { products } = rowsToProducts(rawRows, mapping);
+  if (products.length === 0) {
     const found = Object.keys(rawRows[0] || {}).join(', ');
     throw badRequest(`Не удалось найти поле с названием товара среди [${found}]. Сопоставьте поле «Название».`);
   }
+  return products.map((r) => ({ id: uuid(), ...r }));
+}
 
-  const withIds = rows.map((r) => ({ id: uuid(), ...r }));
+/**
+ * Импорт каталога по URL-фиду — полностью в фоне. Запрос лишь создаёт задачу с конфигом фида и
+ * мгновенно отвечает; фоновая prepare-фаза качает и парсит фид, затем чанковая обработка считает
+ * эмбеддинги и пишет товары партиями. Работает даже на строгих лимитах времени функций.
+ */
+export async function importProductsFromUrl(orgId, agentId, { url, method, headers, format, itemSelector, mapping }) {
+  await assertAgentOwnership(orgId, agentId);
   const jobId = uuid();
-  await catalogRepo.insertImportJob({ id: jobId, agentId, totalRows: withIds.length, rowsData: withIds });
-  await enqueueCatalogImport({ jobId, agentId, cursor: 0 });
-  return { jobId, total: withIds.length };
+  await catalogRepo.insertFeedImportJob({
+    id: jobId,
+    agentId,
+    sourceConfig: { url, method, headers, format, itemSelector, mapping },
+  });
+  await enqueueCatalogImport({ jobId, agentId, phase: 'prepare' });
+  return { jobId, total: 0 };
 }
 
 /**

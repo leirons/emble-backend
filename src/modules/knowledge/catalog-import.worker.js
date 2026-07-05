@@ -1,5 +1,6 @@
 import * as catalogRepo from './catalog.repo.js';
 import * as agentsRepo from '../agents/agents.repo.js';
+import * as catalogService from './catalog.service.js';
 import { embedTexts } from '../../lib/llm/index.js';
 import { enqueueCatalogImport } from '../../lib/queue.js';
 import { logger } from '../../lib/logger.js';
@@ -45,6 +46,16 @@ export async function processCatalogImport({ jobId, agentId }) {
   if (job.status === 'pending') await catalogRepo.updateImportJobStatus(jobId, 'processing');
 
   try {
+    // PREPARE-фаза: задача создана из URL-фида и строки ещё не загружены — качаем и парсим
+    // фид здесь, в фоне (не в HTTP-запросе), затем планируем первый чанк.
+    if (job.sourceConfig && !job.hasRows) {
+      const rows = await catalogService.parseFeedToRows(job.sourceConfig);
+      await catalogRepo.setImportJobRows(jobId, rows.length, rows);
+      await enqueueCatalogImport({ jobId, agentId, cursor: 0 });
+      logger.info({ jobId, total: rows.length }, '[catalog-import] фид загружен и распарсен, чанки запланированы');
+      return;
+    }
+
     const settings = await agentsRepo.getOrCreateSettings(agentId).catch(() => null);
     const apiKey = settings?.openaiApiKey || undefined;
 

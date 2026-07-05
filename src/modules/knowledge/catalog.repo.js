@@ -279,14 +279,35 @@ export async function getImportJobWithData(jobId) {
   return rows[0] || null;
 }
 
-/** Лёгкий чтение метаданных задачи без тяжёлого rows_data (для чанковой обработки). */
+/** Лёгкое чтение метаданных задачи без тяжёлого rows_data (для чанковой обработки).
+ *  sourceConfig — конфиг фида (если задача из URL); hasRows — распарсены ли уже строки. */
 export async function getImportJobMeta(jobId) {
   const { rows } = await query(
-    `SELECT id, agent_id AS "agentId", status, total_rows AS "totalRows", processed_rows AS "processedRows"
+    `SELECT id, agent_id AS "agentId", status, total_rows AS "totalRows", processed_rows AS "processedRows",
+       source_config AS "sourceConfig", (rows_data IS NOT NULL) AS "hasRows"
      FROM catalog_import_jobs WHERE id = $1`,
     [jobId]
   );
   return rows[0] || null;
+}
+
+/** Создаёт задачу импорта из URL-фида без строк — их загрузит фоновая prepare-фаза по sourceConfig. */
+export async function insertFeedImportJob({ id, agentId, sourceConfig }) {
+  const { rows } = await query(
+    `INSERT INTO catalog_import_jobs (id, agent_id, total_rows, source_config)
+     VALUES ($1, $2, 0, $3::jsonb)
+     RETURNING ${IMPORT_JOB_COLUMNS}`,
+    [id, agentId, JSON.stringify(sourceConfig)]
+  );
+  return rows[0];
+}
+
+/** Заполняет распарсенные строки и общее число (конец prepare-фазы фидового импорта). */
+export async function setImportJobRows(jobId, totalRows, rowsData) {
+  await query(
+    `UPDATE catalog_import_jobs SET total_rows = $1, rows_data = $2::jsonb, updated_at = now() WHERE id = $3`,
+    [totalRows, JSON.stringify(rowsData), jobId]
+  );
 }
 
 /** Возвращает срез строк задачи [offset+1 .. offset+limit] — чтобы не тянуть весь rows_data на каждый чанк. */
@@ -334,6 +355,8 @@ export default {
   searchSimilarProducts,
   searchProductsByText,
   insertImportJob,
+  insertFeedImportJob,
+  setImportJobRows,
   getImportJob,
   getImportJobWithData,
   getImportJobMeta,
