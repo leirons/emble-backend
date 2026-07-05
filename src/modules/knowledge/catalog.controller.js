@@ -26,8 +26,19 @@ export async function clearProducts(req, res) {
 }
 
 export async function importProducts(req, res) {
-  const result = await service.importProducts(req.auth.orgId, req.params.agentId, req.file);
+  // При multipart-загрузке mapping приходит строкой (JSON) в поле формы — разбираем его.
+  let mapping = req.body?.mapping;
+  if (typeof mapping === 'string') {
+    try { mapping = JSON.parse(mapping); } catch { mapping = undefined; }
+  }
+  const opts = { mapping, itemSelector: req.body?.itemSelector || undefined };
+  const result = await service.importProducts(req.auth.orgId, req.params.agentId, req.file, opts);
   res.status(202).json(result);
+}
+
+export async function previewFeed(req, res) {
+  const result = await service.previewFeed(req.auth.orgId, req.params.agentId, req.body);
+  res.json(result);
 }
 
 export async function getImportJobStatus(req, res) {
@@ -40,4 +51,4 @@ export async function importProductsFromUrl(req, res) {
   res.status(201).json(result);
 }
 
-export default { listProducts, createProduct, updateProduct, deleteProduct, clearProducts, importProducts, importProductsFromUrl, getImportJobStatus };
+export default { listProducts, createProduct, updateProduct, deleteProduct, clearProducts, importProducts, importProductsFromUrl, previewFeed, getImportJobStatus };

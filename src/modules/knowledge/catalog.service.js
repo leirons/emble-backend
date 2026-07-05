@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid';
+import * as cheerio from 'cheerio';
 import * as catalogRepo from './catalog.repo.js';
 import * as agentsRepo from '../agents/agents.repo.js';
 import { embedTexts } from '../../lib/llm/index.js';
@@ -146,16 +147,73 @@ function csvToObjects(text) {
   });
 }
 
+/**
+ * Универсальный парсер XML-фида → массив плоских объектов { тег/атрибут: значение }.
+ * Понимает YML (Prom/Horoshop, элемент <offer>), Google Merchant RSS (<item>) и любой XML.
+ * itemSelector — тег товара; если не задан, определяется автоматически (offer/item/product/entry
+ * или самый частый повторяющийся элемент). Повторяющиеся теги (напр. несколько <picture>) берутся
+ * по первому вхождению; YML-<param name="Цвет"> раскладывается в ключ "param:Цвет".
+ */
+function xmlToObjects(text, opts = {}) {
+  const $ = cheerio.load(text, { xml: true });
+  let sel = (opts.itemSelector || '').trim();
+  if (!sel) {
+    sel = ['offer', 'item', 'product', 'entry'].find((c) => $(c).length > 0) || '';
+    if (!sel) {
+      const counts = {};
+      $('*').each((_, el) => {
+        if (el.name) counts[el.name] = (counts[el.name] || 0) + 1;
+      });
+      sel = Object.keys(counts).filter((t) => counts[t] >= 2).sort((a, b) => counts[b] - counts[a])[0] || '';
+    }
+  }
+  if (!sel) return { rows: [], itemTag: null };
+
+  const rows = [];
+  $(sel).each((_, node) => {
+    const obj = {};
+    const attribs = node.attribs || {};
+    for (const k of Object.keys(attribs)) obj[k] = String(attribs[k]).trim();
+    $(node)
+      .children()
+      .each((__, child) => {
+        const tag = child.name;
+        if (!tag) return;
+        if (tag === 'param' && child.attribs && child.attribs.name) {
+          const key = 'param:' + child.attribs.name;
+          if (obj[key] === undefined) obj[key] = $(child).text().trim();
+          return;
+        }
+        if (obj[tag] === undefined) obj[tag] = $(child).text().trim();
+      });
+    rows.push(obj);
+  });
+  return { rows, itemTag: sel };
+}
+
+const PRODUCT_FIELDS = ['sku', 'name', 'description', 'price', 'currency', 'url', 'imageUrl', 'category'];
+
+/** Оставляет из пользовательского маппинга только валидные пары «наше поле → тег фида». */
+function cleanMappingOverride(override) {
+  if (!override || typeof override !== 'object') return {};
+  const out = {};
+  for (const field of PRODUCT_FIELDS) {
+    const tag = override[field];
+    if (typeof tag === 'string' && tag.trim()) out[field] = tag.trim();
+  }
+  return out;
+}
+
 // Известные псевдонимы заголовков (рус + англ). Совпадение по ним — приоритетное.
 const COLUMN_ALIASES = {
-  name: ['name', 'title', 'product_name', 'productname', 'название', 'наименование', 'товар', 'имя', 'продукт'],
-  description: ['description', 'desc', 'описание', 'характеристики', 'детали', 'о товаре'],
-  price: ['price', 'cost', 'amount', 'цена', 'стоимость', 'руб', 'грн', 'uah', 'ціна', 'вартість'],
-  currency: ['currency', 'валюта'],
-  url: ['url', 'link', 'product_url', 'producturl', 'ссылка', 'урл', 'линк'],
-  imageUrl: ['image_url', 'imageurl', 'image', 'thumbnail', 'photo', 'фото', 'изображение', 'картинка'],
-  category: ['category', 'категория', 'раздел', 'тип'],
-  sku: ['sku', 'article', 'артикул', 'код', 'код товара'],
+  name: ['name', 'title', 'product_name', 'productname', 'model', 'g:title', 'название', 'наименование', 'товар', 'имя', 'продукт', 'назва'],
+  description: ['description', 'desc', 'g:description', 'sales_notes', 'описание', 'характеристики', 'детали', 'о товаре', 'опис'],
+  price: ['price', 'cost', 'amount', 'g:price', 'цена', 'стоимость', 'руб', 'грн', 'uah', 'ціна', 'вартість'],
+  currency: ['currency', 'currencyid', 'валюта'],
+  url: ['url', 'link', 'product_url', 'producturl', 'offerurl', 'g:link', 'ссылка', 'урл', 'линк', 'посилання'],
+  imageUrl: ['image_url', 'imageurl', 'image', 'picture', 'thumbnail', 'photo', 'g:image_link', 'image_link', 'фото', 'изображение', 'картинка', 'зображення'],
+  category: ['category', 'categoryid', 'g:product_type', 'g:google_product_category', 'категория', 'раздел', 'тип', 'категорія'],
+  sku: ['sku', 'id', 'g:id', 'article', 'vendorcode', 'vendor_code', 'barcode', 'g:mpn', 'g:gtin', 'артикул', 'код', 'код товара', 'артикул товару'],
 };
 
 const isUrl = (v) => /^https?:\/\//i.test(String(v).trim());
@@ -279,9 +337,13 @@ function normalizeWith(raw, mapping) {
   };
 }
 
-/** Инференс колонок + маппинг всех строк в товары (отфильтрованные по непустому имени). */
-function rowsToProducts(rawRows) {
-  const mapping = inferColumns(rawRows);
+/**
+ * Инференс колонок + маппинг всех строк в товары (отфильтрованные по непустому имени).
+ * mappingOverride (наше поле → тег/колонка фида) имеет приоритет над авто-угадыванием —
+ * так владелец может вручную задать соответствие полей.
+ */
+function rowsToProducts(rawRows, mappingOverride) {
+  const mapping = { ...inferColumns(rawRows), ...cleanMappingOverride(mappingOverride) };
   if (!mapping.name) return { products: [], mapping };
   const products = rawRows.map((r) => normalizeWith(r, mapping)).filter((p) => p.name);
   return { products, mapping };
@@ -291,21 +353,26 @@ function rowsToProducts(rawRows) {
  * Массовый импорт каталога из CSV или JSON. Определяет формат по расширению/mime,
  * эмбеддит батчами по EMBED_BATCH_SIZE (как ingestion.worker.js для базы знаний).
  */
-export async function importProducts(orgId, agentId, file) {
+export async function importProducts(orgId, agentId, file, opts = {}) {
   await assertAgentOwnership(orgId, agentId);
   if (!file) throw badRequest('Файл не передан (поле form-data: file)');
 
   const text = file.buffer.toString('utf8');
-  const isJson = file.originalname?.toLowerCase().endsWith('.json') || file.mimetype === 'application/json';
+  const name = (file.originalname || '').toLowerCase();
+  const trimmed = text.replace(/^﻿/, '').trimStart();
+  const isJson = name.endsWith('.json') || file.mimetype === 'application/json' || trimmed.startsWith('[');
+  const isXml = !isJson && (name.endsWith('.xml') || (file.mimetype || '').includes('xml') || /^<\?xml|^<(rss|yml_catalog|feed|catalog|shop)[\s>]/i.test(trimmed));
 
   let rawRows;
   if (isJson) {
     try {
       const parsed = JSON.parse(text);
-      rawRows = Array.isArray(parsed) ? parsed : [];
+      rawRows = Array.isArray(parsed) ? parsed : Array.isArray(parsed.products) ? parsed.products : Array.isArray(parsed.offers) ? parsed.offers : [];
     } catch {
       throw badRequest('Некорректный JSON-файл — ожидается массив объектов');
     }
+  } else if (isXml) {
+    rawRows = xmlToObjects(text, { itemSelector: opts.itemSelector }).rows;
   } else {
     rawRows = csvToObjects(text);
   }
@@ -315,7 +382,7 @@ export async function importProducts(orgId, agentId, file) {
     throw badRequest(`Слишком много строк (${rawRows.length}). Максимум ${MAX_IMPORT_ROWS} за один импорт — разбейте файл.`);
   }
 
-  const { products: rows } = rowsToProducts(rawRows);
+  const { products: rows } = rowsToProducts(rawRows, opts.mapping);
   if (rows.length === 0) {
     const headers = Object.keys(rawRows[0] || {}).join(', ');
     throw badRequest(
@@ -340,12 +407,12 @@ export async function importProducts(orgId, agentId, file) {
 }
 
 /** Общий разбор массива сырых строк каталога → нормализация → эмбеддинг → вставка. */
-async function ingestRows(agentId, rawRows) {
+async function ingestRows(agentId, rawRows, mappingOverride) {
   if (rawRows.length === 0) throw badRequest('Не найдено строк для импорта');
   if (rawRows.length > MAX_IMPORT_ROWS) {
     throw badRequest(`Слишком много строк (${rawRows.length}). Максимум ${MAX_IMPORT_ROWS} за один импорт.`);
   }
-  const { products: rows } = rowsToProducts(rawRows);
+  const { products: rows } = rowsToProducts(rawRows, mappingOverride);
   if (rows.length === 0) {
     const headers = Object.keys(rawRows[0] || {}).join(', ');
     throw badRequest(`Не найдено колонки с названием товара среди [${headers}].`);
@@ -369,11 +436,14 @@ async function ingestRows(agentId, rawRows) {
  * Импорт каталога с внешнего API по URL. Поддерживает произвольный метод и заголовки
  * (например, Authorization: Bearer ...) — данные тянутся с защищённого эндпоинта клиента.
  */
-export async function importProductsFromUrl(orgId, agentId, { url, method, headers, format }) {
-  await assertAgentOwnership(orgId, agentId);
+/**
+ * Скачивает URL и парсит ответ в массив сырых строк. Формат определяется по параметру
+ * format, Content-Type или содержимому: JSON, XML-фид (YML/RSS) или CSV.
+ */
+async function fetchFeedRows(url, { method, headers, format, itemSelector } = {}) {
   let res;
   try {
-    res = await fetch(url, { method: method || 'GET', headers: headers || {}, signal: AbortSignal.timeout(15000) });
+    res = await fetch(url, { method: method || 'GET', headers: headers || {}, signal: AbortSignal.timeout(20000) });
   } catch (err) {
     throw badRequest(`Не удалось запросить URL: ${err instanceof Error ? err.message : String(err)}`);
   }
@@ -381,22 +451,66 @@ export async function importProductsFromUrl(orgId, agentId, { url, method, heade
 
   const text = await res.text();
   const contentType = res.headers.get('content-type') || '';
-  const isJson = format === 'json' || (format !== 'csv' && (contentType.includes('json') || text.trim().startsWith('[')));
+  const trimmed = text.replace(/^﻿/, '').trimStart();
+
+  let detected = format;
+  if (!detected) {
+    if (contentType.includes('json') || trimmed.startsWith('[') || trimmed.startsWith('{')) detected = 'json';
+    else if (contentType.includes('xml') || /^<\?xml|^<(rss|yml_catalog|feed|catalog|shop)[\s>]/i.test(trimmed)) detected = 'xml';
+    else detected = 'csv';
+  }
 
   let rawRows;
-  if (isJson) {
+  let itemTag = null;
+  if (detected === 'json') {
+    let parsed;
     try {
-      const parsed = JSON.parse(text);
-      rawRows = Array.isArray(parsed) ? parsed : Array.isArray(parsed.products) ? parsed.products : Array.isArray(parsed.items) ? parsed.items : [];
+      parsed = JSON.parse(text);
     } catch {
-      throw badRequest('Ответ не является корректным JSON-массивом');
+      throw badRequest('Ответ не является корректным JSON');
     }
+    rawRows = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed.products)
+        ? parsed.products
+        : Array.isArray(parsed.items)
+          ? parsed.items
+          : Array.isArray(parsed.offers)
+            ? parsed.offers
+            : [];
+  } else if (detected === 'xml') {
+    const parsed = xmlToObjects(text, { itemSelector });
+    rawRows = parsed.rows;
+    itemTag = parsed.itemTag;
   } else {
     rawRows = csvToObjects(text);
   }
 
-  const products = await ingestRows(agentId, rawRows);
+  return { rawRows, format: detected, itemTag };
+}
+
+/**
+ * Импорт каталога с внешнего URL/API. Формат — JSON, XML-фид (YML/Google Merchant) или CSV.
+ * mapping (наше поле → тег фида) и itemSelector позволяют вручную задать разбор.
+ */
+export async function importProductsFromUrl(orgId, agentId, { url, method, headers, format, itemSelector, mapping }) {
+  await assertAgentOwnership(orgId, agentId);
+  const { rawRows } = await fetchFeedRows(url, { method, headers, format, itemSelector });
+  const products = await ingestRows(agentId, rawRows, mapping);
   return { products, count: products.length };
+}
+
+/**
+ * Предпросмотр фида без импорта: возвращает определённый формат, тег товара, число позиций,
+ * список доступных полей, предложенный авто-маппинг и несколько примеров строк — чтобы
+ * владелец мог сопоставить поля вручную перед импортом.
+ */
+export async function previewFeed(orgId, agentId, { url, method, headers, format, itemSelector }) {
+  await assertAgentOwnership(orgId, agentId);
+  const { rawRows, format: detected, itemTag } = await fetchFeedRows(url, { method, headers, format, itemSelector });
+  const fields = Array.from(new Set(rawRows.slice(0, 50).flatMap((r) => Object.keys(r || {}))));
+  const suggestedMapping = rawRows.length ? inferColumns(rawRows) : {};
+  return { format: detected, itemTag, count: rawRows.length, fields, suggestedMapping, sample: rawRows.slice(0, 5) };
 }
 
 export async function getImportJobStatus(orgId, agentId, jobId) {
@@ -406,4 +520,4 @@ export async function getImportJobStatus(orgId, agentId, jobId) {
   return { status: job.status, processed: job.processedRows, total: job.totalRows, error: job.errorMessage };
 }
 
-export default { createProduct, listProducts, updateProduct, deleteProduct, clearProducts, importProducts, importProductsFromUrl, getImportJobStatus };
+export default { createProduct, listProducts, updateProduct, deleteProduct, clearProducts, importProducts, importProductsFromUrl, previewFeed, getImportJobStatus };

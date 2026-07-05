@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import * as controller from './catalog.controller.js';
-import { createProductSchema, updateProductSchema, importUrlSchema } from './catalog.schema.js';
+import { createProductSchema, updateProductSchema, importUrlSchema, previewFeedSchema } from './catalog.schema.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncHandler as h } from '../../lib/asyncHandler.js';
 
@@ -16,6 +16,7 @@ const upload = multer({
 router.get('/', h(controller.listProducts));
 router.post('/', validate(createProductSchema), h(controller.createProduct));
 router.post('/import', upload.single('file'), h(controller.importProducts));
+router.post('/import-url/preview', validate(previewFeedSchema), h(controller.previewFeed));
 router.post('/import-url', validate(importUrlSchema), h(controller.importProductsFromUrl));
 router.get('/import-jobs/:jobId', h(controller.getImportJobStatus));
 router.delete('/', h(controller.clearProducts));
