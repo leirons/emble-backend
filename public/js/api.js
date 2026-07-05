@@ -161,6 +161,8 @@
     },
     importProductsFromUrl: (id, payload) =>
       request(`/agents/${id}/knowledge/products/import-url`, { method: 'POST', body: payload }),
+    previewFeed: (id, payload) =>
+      request(`/agents/${id}/knowledge/products/import-url/preview`, { method: 'POST', body: payload }),
     importJobStatus: (id, jobId) =>
       request(`/agents/${id}/knowledge/products/import-jobs/${jobId}`),
 

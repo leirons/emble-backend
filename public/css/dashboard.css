@@ -448,6 +448,15 @@ body.dash { min-height: 100vh; }
 /* Drawer form fields */
 .kb-label { font-size: 13px; color: #A7ACC0; font-weight: 500; display: block; margin: 18px 0 8px; }
 .kb-label-first { margin-top: 0; }
+.kb-api-row { display: flex; gap: 12px; }
+.kb-api-col { flex: 1; min-width: 0; }
+.kb-preview-info { font-size: 13px; color: #A7ACC0; margin: 18px 0 10px; padding: 10px 12px; background: #0C0E15; border: 1px solid rgba(255,255,255,0.06); border-radius: 9px; }
+.kb-preview-info b { color: #E8EAF0; font-weight: 600; }
+.kb-map-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 16px; }
+.kb-map-row { display: flex; align-items: center; gap: 10px; }
+.kb-map-label { flex: 0 0 96px; font-size: 13px; color: #A7ACC0; }
+.kb-map-sel { flex: 1; margin: 0; }
+@media (max-width: 640px) { .kb-map-grid, .kb-api-row { grid-template-columns: 1fr; flex-direction: column; } }
 .kb-input { width: 100%; background: #0C0E15; border: 1px solid rgba(255,255,255,0.08); border-radius: 9px; padding: 12px 14px; font-size: 14px; color: #E8EAF0; font-family: inherit; box-sizing: border-box; }
 .kb-input:focus { outline: none; border-color: rgba(61,224,160,0.5); }
 .kb-textarea { resize: vertical; line-height: 1.5; min-height: 90px; }

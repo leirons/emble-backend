@@ -1318,10 +1318,10 @@
         box.innerHTML = `
           <div class="kb-drop" id="kbDrop">
             <div class="kb-drop-ic">${IC.upload}</div>
-            <div class="kb-drop-title">Перетащите файл CSV или JSON</div>
-            <div class="kb-drop-sub">Колонки: name, description, price, url, image_url, category, sku. До 10 000 строк.</div>
+            <div class="kb-drop-title">Перетащите файл CSV, JSON или XML</div>
+            <div class="kb-drop-sub">CSV/JSON-колонки или XML-фид (YML / Google Merchant). До 10 000 позиций.</div>
             <button type="button" class="kb-btn-outline" id="pImportChoose">Выбрать файл</button>
-            <input type="file" id="pImportFile" accept=".csv,.json" style="display:none;">
+            <input type="file" id="pImportFile" accept=".csv,.json,.xml" style="display:none;">
           </div>
           <div id="importProgress"></div>
         `;
@@ -1335,34 +1335,101 @@
       } else {
         box.innerHTML = `
           <div class="kb-api-box">
-            <label class="kb-label kb-label-first">URL внешнего API (JSON-массив или CSV)</label>
-            <input type="text" class="kb-input" id="pImportUrl" placeholder="https://api.myshop.com/products">
-            <label class="kb-label">Метод</label>
-            <select class="kb-input" id="pImportMethod"><option>GET</option><option>POST</option></select>
+            <label class="kb-label kb-label-first">URL фида или API (XML-фид, JSON или CSV)</label>
+            <input type="text" class="kb-input" id="pImportUrl" placeholder="https://shop.ua/feed.xml">
+            <div class="kb-api-row">
+              <div class="kb-api-col">
+                <label class="kb-label">Формат</label>
+                <select class="kb-input" id="pImportFormat"><option value="">Авто</option><option value="xml">XML (YML / Merchant)</option><option value="json">JSON</option><option value="csv">CSV</option></select>
+              </div>
+              <div class="kb-api-col">
+                <label class="kb-label">Метод</label>
+                <select class="kb-input" id="pImportMethod"><option>GET</option><option>POST</option></select>
+              </div>
+              <div class="kb-api-col">
+                <label class="kb-label">Тег товара (XML, опц.)</label>
+                <input type="text" class="kb-input" id="pImportItem" placeholder="напр. offer">
+              </div>
+            </div>
             <label class="kb-label">Заголовки (JSON, для авторизации)</label>
             <textarea class="kb-input kb-textarea" id="pImportHeaders" rows="2" placeholder='{"Authorization": "Bearer ..."}'></textarea>
-            <button type="button" class="kb-btn kb-mt" id="pImportUrlBtn">Импортировать по API</button>
+            <button type="button" class="kb-btn-outline kb-mt" id="pPreviewBtn">Предпросмотр полей</button>
+            <div id="feedPreview"></div>
           </div>
         `;
-        document.getElementById('pImportUrlBtn').addEventListener('click', async () => {
-          showError('productsError', null);
+
+        const collectParams = () => {
           const url = document.getElementById('pImportUrl').value.trim();
-          if (!url) return;
-          const btn = document.getElementById('pImportUrlBtn');
+          if (!url) { showError('productsError', new Error('Укажите URL фида')); return null; }
+          let headers;
+          const headersRaw = document.getElementById('pImportHeaders').value.trim();
+          if (headersRaw) { try { headers = JSON.parse(headersRaw); } catch { showError('productsError', new Error('Заголовки: некорректный JSON')); return null; } }
+          return {
+            url,
+            method: document.getElementById('pImportMethod').value,
+            format: document.getElementById('pImportFormat').value || undefined,
+            itemSelector: document.getElementById('pImportItem').value.trim() || undefined,
+            headers,
+          };
+        };
+
+        const MAP_FIELDS = [
+          ['name', 'Название *'], ['price', 'Цена'], ['url', 'Ссылка'], ['imageUrl', 'Фото'],
+          ['description', 'Описание'], ['sku', 'Артикул'], ['currency', 'Валюта'], ['category', 'Категория'],
+        ];
+
+        function renderMappingUI(p, params) {
+          const box2 = document.getElementById('feedPreview');
+          if (!p.count) {
+            box2.innerHTML = `<div class="kb-empty">Фид пустой или не распознан (формат: ${escapeHtml(p.format || '—')}).</div>`;
+            return;
+          }
+          const optsFor = (sel) => ['<option value="">— не импортировать —</option>']
+            .concat((p.fields || []).map((f) => `<option value="${escapeHtml(f)}"${f === sel ? ' selected' : ''}>${escapeHtml(f)}</option>`)).join('');
+          box2.innerHTML = `
+            <div class="kb-preview-info">Формат: <b>${escapeHtml(p.format)}</b> · тег товара: <b>${escapeHtml(p.itemTag || '—')}</b> · позиций: <b>${p.count}</b></div>
+            <div class="kb-map-grid">
+              ${MAP_FIELDS.map(([field, label]) => `
+                <div class="kb-map-row">
+                  <span class="kb-map-label">${label}</span>
+                  <select class="kb-input kb-map-sel" data-field="${field}">${optsFor((p.suggestedMapping || {})[field] || '')}</select>
+                </div>`).join('')}
+            </div>
+            <button type="button" class="kb-btn kb-mt" id="pDoImportBtn">Импортировать</button>
+          `;
+          document.getElementById('pDoImportBtn').addEventListener('click', async () => {
+            const mapping = {};
+            box2.querySelectorAll('.kb-map-sel').forEach((s) => { if (s.value) mapping[s.dataset.field] = s.value; });
+            if (!mapping.name) { showError('productsError', new Error('Сопоставьте поле «Название»')); return; }
+            const btn = document.getElementById('pDoImportBtn');
+            setLoading(btn, true);
+            try {
+              const data = await api.importProductsFromUrl(agent.id, { ...params, mapping });
+              toast(`Импортировано товаров: ${data.count}`);
+              productMode = 'manual';
+              syncSegActive();
+              renderCatalogBody();
+            } catch (err) {
+              showError('productsError', err);
+            } finally {
+              setLoading(btn, false, 'Импортировать');
+            }
+          });
+        }
+
+        document.getElementById('pPreviewBtn').addEventListener('click', async () => {
+          showError('productsError', null);
+          const params = collectParams();
+          if (!params) return;
+          const btn = document.getElementById('pPreviewBtn');
           setLoading(btn, true);
           try {
-            let headers;
-            const headersRaw = document.getElementById('pImportHeaders').value.trim();
-            if (headersRaw) { try { headers = JSON.parse(headersRaw); } catch { throw new Error('Заголовки: некорректный JSON'); } }
-            const data = await api.importProductsFromUrl(agent.id, { url, method: document.getElementById('pImportMethod').value, headers });
-            toast(`Импортировано товаров: ${data.count}`);
-            productMode = 'manual';
-            syncSegActive();
-            renderCatalogBody();
+            const p = await api.previewFeed(agent.id, params);
+            renderMappingUI(p, params);
           } catch (err) {
             showError('productsError', err);
           } finally {
-            setLoading(btn, false, 'Импортировать по API');
+            setLoading(btn, false, 'Предпросмотр полей');
           }
         });
       }
