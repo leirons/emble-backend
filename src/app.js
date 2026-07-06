@@ -42,7 +42,20 @@ export function createApp() {
   app.use(express.json({ limit: '1mb' }));
 
   // Статика: embed.js и демо-страница отдаются публично, без CORS-ограничений (это <script src>, не fetch/XHR).
-  app.use(express.static(path.join(__dirname, '..', 'public')));
+  // Кэш-заголовки: JS/CSS/шрифты браузер отдаёт из кэша мгновенно (без round-trip на ревалидацию),
+  // а stale-while-revalidate тихо обновляет их в фоне. HTML остаётся всегда свежим, чтобы деплой был
+  // виден сразу. Без этого express.static ставил max-age=0 → каждый заход перекачивал все ассеты.
+  app.use(
+    express.static(path.join(__dirname, '..', 'public'), {
+      setHeaders(res, filePath) {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        } else {
+          res.setHeader('Cache-Control', 'public, max-age=600, stale-while-revalidate=86400');
+        }
+      },
+    })
+  );
 
   app.get('/health', (req, res) => res.json({ ok: true, env: env.nodeEnv }));
 
