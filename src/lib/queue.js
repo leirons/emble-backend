@@ -26,7 +26,9 @@ async function publishToQStash(topic, payload, dedupId) {
   if (env.jobSecret) headers['Upstash-Forward-x-job-secret'] = env.jobSecret;
   if (dedupId) headers['Upstash-Deduplication-Id'] = dedupId;
 
-  const res = await fetch(`${env.qstash.url}/v2/publish/${encodeURIComponent(target)}`, {
+  // Адрес назначения добавляется в путь КАК ЕСТЬ (не URL-энкодится) — QStash парсит всё
+  // после /v2/publish/ как URL. При encodeURIComponent он отвечает 400 "invalid scheme".
+  const res = await fetch(`${env.qstash.url}/v2/publish/${target}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
