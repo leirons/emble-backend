@@ -91,7 +91,7 @@ export async function countAgentsByOrg(orgId) {
 const BRANDING_COLUMNS = `
   agent_id AS "agentId", avatar_url AS "avatarUrl", brand_color AS "brandColor", greeting,
   quick_replies AS "quickReplies", widget_form_factor AS "widgetFormFactor", position,
-  start_menu AS "startMenu", updated_at AS "updatedAt"
+  start_menu AS "startMenu", product_card_style AS "productCardStyle", updated_at AS "updatedAt"
 `;
 
 export async function getBranding(agentId) {
@@ -115,6 +115,7 @@ export async function upsertBranding(agentId, branding) {
     widget_form_factor: branding.widgetFormFactor,
     position: branding.position,
     start_menu: branding.startMenu !== undefined ? JSON.stringify(branding.startMenu) : undefined,
+    product_card_style: branding.productCardStyle,
   };
   const jsonbCols = new Set(['quick_replies', 'start_menu']);
   const sets = [];

@@ -334,7 +334,17 @@ export async function handleUserMessage({ agent, orgId, conversationId, userText
     void actionsService.dispatchEventActions(agent.id, 'conversation_escalated', { conversationId, question: userText });
   }
 
-  return { userMessage, assistantMessage, escalated };
+  // Товары для карточек-рекомендаций в виджете (top-3 из уже отфильтрованных по релевантности/цене).
+  // Старой цены и бейджа в схеме пока нет — фронт рендерит их опционально, когда поля появятся.
+  const products = productMatches.slice(0, 3).map((p) => ({
+    name: p.name,
+    price: p.price != null ? Number(p.price) : null,
+    currency: p.currency || null,
+    url: p.url || null,
+    imageUrl: p.imageUrl || null,
+  }));
+
+  return { userMessage, assistantMessage, escalated, products };
 }
 
 // --- Дашборд: просмотр диалогов ---

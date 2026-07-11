@@ -89,7 +89,7 @@ export async function sendMessage(req, res) {
   const channel = createSSEChannel(req, res);
 
   try {
-    const { assistantMessage, escalated } = await handleUserMessage({
+    const { assistantMessage, escalated, products } = await handleUserMessage({
       agent,
       orgId: agent.orgId,
       conversationId: req.params.conversationId,
@@ -97,6 +97,8 @@ export async function sendMessage(req, res) {
       onDelta: (delta) => channel.send('delta', { text: delta }),
     });
     if (escalated) channel.send('escalated', {});
+    // Товары-рекомендации: виджет отрисует их карточками под ответом ассистента.
+    if (products && products.length) channel.send('products', { products });
     channel.send('done', { messageId: assistantMessage.id });
   } catch (err) {
     logger.error({ err }, 'Ошибка при обработке сообщения виджета');

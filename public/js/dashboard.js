@@ -490,6 +490,8 @@
       position: branding.position || 'bottom-right',
       statusText: branding.statusText || 'Онлайн',
       startMenu: { enabled: !!sm.enabled, items: Array.isArray(sm.items) ? sm.items.map((it) => ({ ...it })) : [] },
+      // Баннер карточек товаров: 'image' — фото товара, 'gradient' — градиентный квадрат.
+      productCardStyle: branding.productCardStyle === 'gradient' ? 'gradient' : 'image',
     };
     const MENU_TYPE_LABEL = { chat: 'Чат с ассистентом', faq: 'Часто задаваемые вопросы', contacts: 'Контакты и график' };
     const SOCIAL_FIELDS = [
@@ -562,6 +564,13 @@
               </div>
             </div>
  
+            <div class="field" style="border-top:1px solid var(--border); padding-top:16px;">
+              <div class="toggle-row" style="padding-top:0;">
+                <div><div class="label">${t('Градиентные карточки товаров')}</div><div class="desc">${t('Показывать красивый градиентный квадрат вместо фото товара в рекомендациях')}</div></div>
+                <label class="switch"><input type="checkbox" id="bProductGradient" ${state.productCardStyle === 'gradient' ? 'checked' : ''}><span class="track"></span></label>
+              </div>
+            </div>
+
             <div class="field" style="border-top:1px solid var(--border); padding-top:16px;">
               <div class="toggle-row" style="padding-top:0;">
                 <div><div class="label">${t('Стартовое меню')}</div><div class="desc">${t('Домашний экран с кнопками при открытии виджета')}</div></div>
@@ -861,11 +870,13 @@
           await api.updateAgent(agent.id, { name: state.name.trim() });
           agent.name = state.name.trim();
         }
+        const productGradientEl = document.getElementById('bProductGradient');
         await api.updateBranding(agent.id, {
           brandColor: state.color,
           // Отправляем всегда, в т.ч. пустую строку — так приветствие можно убрать.
           greeting: state.greeting.trim(),
           position: state.position === 'bottom-left' ? 'bottom-left' : 'bottom-right',
+          productCardStyle: productGradientEl && productGradientEl.checked ? 'gradient' : 'image',
           avatarUrl: state.avatar,
           startMenu: {
             enabled: state.startMenu.enabled,

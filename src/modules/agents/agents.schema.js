@@ -33,6 +33,8 @@ export const brandingSchema = z.object({
   quickReplies: z.array(z.string().min(1).max(80)).max(6).optional(),
   widgetFormFactor: z.enum(['floating_chat', 'inline_block', 'side_panel', 'minimal_bubble']).optional(),
   position: z.enum(['bottom-right', 'bottom-left']).optional(),
+  // Стиль баннера карточек товаров: фото товара или градиентный квадрат.
+  productCardStyle: z.enum(['image', 'gradient']).optional(),
   startMenu: z
     .object({
       enabled: z.boolean().optional(),

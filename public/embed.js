@@ -282,7 +282,18 @@
       'border-radius:12px; padding:12px; margin-top:6px; }' +
       '.emble-proactive { position:fixed; ' + panelPosCss() + ' max-width:220px; background:#11151F; ' +
       'border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:12px 14px; font-size:13px; ' +
-      'line-height:1.4; color:#E5E7EB; box-shadow:0 16px 40px rgba(0,0,0,.45); cursor:pointer; z-index:2147483000; }'
+      'line-height:1.4; color:#E5E7EB; box-shadow:0 16px 40px rgba(0,0,0,.45); cursor:pointer; z-index:2147483000; }' +
+      // Карточки рекомендованных товаров (появляются под ответом ассистента).
+      '.emble-prod-wrap { display:flex; flex-direction:column; gap:10px; align-self:flex-start; max-width:82%; margin-top:2px; }' +
+      '.emble-prod { border-radius:14px; overflow:hidden; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); }' +
+      '.emble-prod-banner { position:relative; height:88px; background-size:cover; background-position:center; ' +
+      'background-color: var(--widget-bg); background-image:linear-gradient(135deg, var(--widget-bg), color-mix(in srgb, var(--widget-bg) 45%, #ffffff)); }' +
+      '.emble-prod-body { padding:11px 13px 13px; }' +
+      '.emble-prod-name { color:#F3F4F6; font-size:14px; font-weight:700; line-height:1.3; }' +
+      '.emble-prod-price { display:flex; align-items:baseline; gap:8px; margin-top:6px; }' +
+      '.emble-prod-now { color:' + brand + '; font-size:15px; font-weight:700; }' +
+      '.emble-prod-link { display:inline-block; margin-top:9px; color:' + brand + '; font-size:12.5px; font-weight:600; text-decoration:none; }' +
+      '.emble-prod-link:hover { text-decoration:underline; }'
     );
   }
 
@@ -721,6 +732,60 @@
     return msg;
   }
 
+  // Разрешаем только http(s)-ссылки (защита от javascript:/data: в href и background-image).
+  function safeUrl(u) {
+    return typeof u === 'string' && /^https?:\/\//i.test(u.trim()) ? u.trim() : '';
+  }
+
+  // 2800 -> "2 800"; валюта: UAH->грн, USD->$, EUR->€, иначе как есть. null-цена -> ''.
+  function normalizeCurrency(c) {
+    if (!c) return 'грн';
+    var s = String(c).toLowerCase();
+    if (s === 'uah' || s === 'грн' || s === 'грн.') return 'грн';
+    if (s === 'usd' || s === '$') return '$';
+    if (s === 'eur' || s === '€') return '€';
+    return c;
+  }
+  function formatMoney(price, currency) {
+    if (price == null || price === '') return '';
+    var n = Math.round(Number(price));
+    if (!isFinite(n)) return '';
+    var grouped = String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return (n < 0 ? '-' : '') + grouped + ' ' + normalizeCurrency(currency);
+  }
+
+  // Карточки товаров-рекомендаций под ответом ассистента: баннер (фото товара или
+  // градиентный квадрат — по настройке productCardStyle), название, цена, ссылка.
+  function renderProductCards(products) {
+    var wrap = el('div', { class: 'emble-prod-wrap' });
+    var gradientMode = (STATE.branding && STATE.branding.productCardStyle) === 'gradient';
+    (products || []).slice(0, 3).forEach(function (p) {
+      if (!p || !p.name) return;
+      var banner = el('div', { class: 'emble-prod-banner' });
+      // 'image' — фото товара (picture) с градиентным фолбэком, если фото нет;
+      // 'gradient' — всегда красивый градиентный квадрат (фото игнорируем).
+      if (!gradientMode) {
+        var img = safeUrl(p.imageUrl);
+        if (img) banner.style.backgroundImage = 'url("' + img.replace(/["')]/g, '') + '")';
+      }
+
+      var body = el('div', { class: 'emble-prod-body' }, [el('div', { class: 'emble-prod-name' }, [p.name])]);
+      var priceRow = el('div', { class: 'emble-prod-price' });
+      var now = formatMoney(p.price, p.currency);
+      if (now) priceRow.appendChild(el('span', { class: 'emble-prod-now' }, [now]));
+      body.appendChild(priceRow);
+
+      var href = safeUrl(p.url);
+      if (href) body.appendChild(el('a', { class: 'emble-prod-link', href: href, target: '_blank', rel: 'noopener' }, ['Перейти до товару ↗']));
+
+      wrap.appendChild(el('div', { class: 'emble-prod' }, [banner, body]));
+    });
+    if (wrap.children.length) {
+      messagesEl.appendChild(wrap);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+  }
+
   // Пузырёк «печатает…» — три анимированные точки, пока ждём/стримим ответ ассистента.
   function showTypingIndicator() {
     var bubble = el('div', { class: 'emble-msg emble-typing' }, [
@@ -791,6 +856,8 @@
           assistantEl.textContent = data.message || 'Сталася помилка.';
         } else if (event === 'escalated') {
           handleEscalation();
+        } else if (event === 'products') {
+          if (data && data.products) renderProductCards(data.products);
         } else if (event === 'done') {
           if (data.messageId) appendFeedback(assistantEl, data.messageId);
         }
